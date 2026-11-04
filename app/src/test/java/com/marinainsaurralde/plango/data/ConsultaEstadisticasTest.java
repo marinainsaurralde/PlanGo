@@ -1,0 +1,8 @@
+package com.marinainsaurralde.plango.data;
+import static org.junit.Assert.*;import com.marinainsaurralde.plango.model.*;import org.junit.Test;import java.util.*;
+public class ConsultaEstadisticasTest{
+ private Evento e(String id,boolean free,boolean informed,String district,String type){return new Evento(id,id,null,null,district,type,free,informed,null,null,null,null,null,null,null,null);}
+ @Test public void calculatesConsistentTotalsAndGroups(){List<Evento>events=Arrays.asList(e("1",true,true,"CENTRO","/Musica"),e("2",false,true,"CENTRO","/Teatro"),e("3",false,false,"RETIRO",null));ConsultaHistorial c=ConsultaEstadisticas.calcular(events,"manual");assertEquals(3,c.totalEventos);assertEquals(1,c.totalGratuitos);assertEquals(1,c.totalPago);assertEquals(1,c.totalSinInformacion);assertEquals(c.totalEventos,c.totalGratuitos+c.totalPago+c.totalSinInformacion);assertEquals(Integer.valueOf(2),c.eventosPorDistrito.get("CENTRO"));assertEquals(Integer.valueOf(1),c.eventosPorTipo.get("Musica"));}
+ @Test public void limitsSampleToFifteen(){List<Evento>events=new ArrayList<>();for(int i=0;i<20;i++)events.add(e(String.valueOf(i),true,true,null,null));assertEquals(15,ConsultaEstadisticas.calcular(events,"automatica").muestraEventos.size());}
+ @Test public void handlesEmptyList(){ConsultaHistorial c=ConsultaEstadisticas.calcular(Collections.emptyList(),"automatica");assertEquals(0,c.totalEventos);assertTrue(c.eventosPorDistrito.isEmpty());assertTrue(c.eventosPorTipo.isEmpty());assertTrue(c.muestraEventos.isEmpty());}
+}

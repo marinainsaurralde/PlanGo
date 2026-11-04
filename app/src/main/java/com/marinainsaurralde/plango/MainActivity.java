@@ -36,7 +36,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.marinainsaurralde.plango.data.MadridApiClient;
 import com.marinainsaurralde.plango.data.EventosStore;
+import com.marinainsaurralde.plango.data.ConsultasRepository;
+import com.marinainsaurralde.plango.data.ConsultaEstadisticas;
 import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.model.ConsultaHistorial;
 import com.marinainsaurralde.plango.model.FiltroEventos;
 import com.marinainsaurralde.plango.ui.DistritoAdapter;
 import com.marinainsaurralde.plango.ui.FiltrosViewBinder;
@@ -45,6 +48,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -58,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean eventsRequested;
     private FiltrosViewBinder filtrosViewBinder;
     private List<String> availableDistricts = Collections.emptyList();
+    private boolean downloadInProgress;
 
     private final ActivityResultLauncher<Intent> signInLauncher =
             registerForActivityResult(
@@ -83,7 +91,9 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.buttonMyPlans).setOnClickListener(
                 view -> startActivity(new Intent(this, MisPlanesActivity.class))
         );
-        findViewById(R.id.buttonRetryMapEvents).setOnClickListener(view -> loadMapEvents());
+        findViewById(R.id.buttonHistory).setOnClickListener(view -> startActivity(new Intent(this, HistorialActivity.class)));
+        findViewById(R.id.buttonRefreshEvents).setOnClickListener(view -> loadMapEvents(true));
+        findViewById(R.id.buttonRetryMapEvents).setOnClickListener(view -> loadMapEvents(false));
         setupFilters();
         findViewById(R.id.buttonDistrict).setOnClickListener(view -> showDistrictBottomSheet());
 
@@ -169,8 +179,9 @@ public class MainActivity extends AppCompatActivity {
             eventsRequested = true;
             populateDistricts();
             applyFilters();
+            updateLastRefreshText();
         } else if (!eventsRequested) {
-            loadMapEvents();
+            loadMapEvents(false);
         }
     }
 
@@ -203,18 +214,25 @@ public class MainActivity extends AppCompatActivity {
         renderEventMarkers();
     }
 
-    private void loadMapEvents() {
+    private void loadMapEvents(boolean manual) {
+        if (downloadInProgress) return;
+        FirebaseUser startUser=FirebaseAuth.getInstance().getCurrentUser();
+        if(startUser==null)return;
+        String startUid=startUser.getUid(), downloadId=UUID.randomUUID().toString();
+        downloadInProgress=true; findViewById(R.id.buttonRefreshEvents).setEnabled(false);
         eventsRequested = true;
         showMapLoading();
         madridApiClient.obtenerTodosLosEventos(new MadridApiClient.Callback() {
             @Override
             public void onSuccess(List<Evento> eventos) {
-                if (isFinishing() || isDestroyed()) {
-                    return;
-                }
                 eventosStore.setEventos(eventos);
-                populateDistricts();
-                applyFilters();
+                ConsultaHistorial stats=ConsultaEstadisticas.calcular(eventos,manual?"manual":"automatica");
+                ConsultasRepository.getInstance().guardar(startUid,downloadId,stats,new ConsultasRepository.SaveCallback(){
+                    @Override public void onSuccess(){if(manual&&!isFinishing()&&!isDestroyed())Snackbar.make(findViewById(R.id.main),R.string.refresh_success,Snackbar.LENGTH_LONG).show();}
+                    @Override public void onError(Exception error){if(!isFinishing()&&!isDestroyed())Snackbar.make(findViewById(R.id.main),R.string.history_save_error,Snackbar.LENGTH_LONG).show();}
+                });
+                if (isFinishing() || isDestroyed()) return;
+                populateDistricts(); applyFilters(); finishDownload(); updateLastRefreshText();
             }
 
             @Override
@@ -222,10 +240,14 @@ public class MainActivity extends AppCompatActivity {
                 if (isFinishing() || isDestroyed()) {
                     return;
                 }
-                showMapError();
+                finishDownload();
+                if(eventosStore.isLoaded()){findViewById(R.id.progressMapEvents).setVisibility(View.GONE);Snackbar.make(findViewById(R.id.main),R.string.refresh_error,Snackbar.LENGTH_LONG).show();}else showMapError();
             }
         });
     }
+
+    private void finishDownload(){downloadInProgress=false;findViewById(R.id.buttonRefreshEvents).setEnabled(true);}
+    private void updateLastRefreshText(){long value=eventosStore.getLastUpdatedMillis();TextView view=findViewById(R.id.textLastRefresh);if(value==0){view.setText(R.string.never_updated);return;}DateTimeFormatter f=DateTimeFormatter.ofPattern("d MMM, HH:mm",new Locale("es","ES"));view.setText(getString(R.string.last_updated,Instant.ofEpochMilli(value).atZone(ZoneId.of("Europe/Madrid")).format(f)));}
 
     private void setupFilters() {
         filtrosViewBinder = new FiltrosViewBinder(

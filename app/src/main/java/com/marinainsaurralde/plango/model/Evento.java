@@ -23,6 +23,7 @@ public class Evento implements Serializable {
     private final String distrito;
     private final String tipo;
     private final boolean gratuito;
+    private final boolean gratuidadInformada;
     private final Double latitud;
     private final Double longitud;
     private final String nombreInstalacion;
@@ -46,7 +47,7 @@ public class Evento implements Serializable {
             String diasSemana,
             String diasExcluidos
     ) {
-        this(identificador, titulo, fechaInicio, fechaFin, distrito, tipo, gratuito,
+        this(identificador, titulo, fechaInicio, fechaFin, distrito, tipo, gratuito, true,
                 latitud, longitud, nombreInstalacion, diasSemana, diasExcluidos,
                 null, null, null);
     }
@@ -68,6 +69,29 @@ public class Evento implements Serializable {
             String precio,
             String urlOficial
     ) {
+        this(identificador, titulo, fechaInicio, fechaFin, distrito, tipo, gratuito, true,
+                latitud, longitud, nombreInstalacion, diasSemana, diasExcluidos,
+                hora, precio, urlOficial);
+    }
+
+    public Evento(
+            String identificador,
+            String titulo,
+            String fechaInicio,
+            String fechaFin,
+            String distrito,
+            String tipo,
+            boolean gratuito,
+            boolean gratuidadInformada,
+            Double latitud,
+            Double longitud,
+            String nombreInstalacion,
+            String diasSemana,
+            String diasExcluidos,
+            String hora,
+            String precio,
+            String urlOficial
+    ) {
         this.identificador = identificador;
         this.titulo = titulo;
         this.fechaInicio = fechaInicio;
@@ -75,6 +99,7 @@ public class Evento implements Serializable {
         this.distrito = distrito;
         this.tipo = tipo;
         this.gratuito = gratuito;
+        this.gratuidadInformada = gratuidadInformada;
         this.latitud = latitud;
         this.longitud = longitud;
         this.nombreInstalacion = nombreInstalacion;
@@ -111,6 +136,10 @@ public class Evento implements Serializable {
 
     public boolean isGratuito() {
         return gratuito;
+    }
+
+    public boolean isGratuidadInformada() {
+        return gratuidadInformada;
     }
 
     public Double getLatitud() {

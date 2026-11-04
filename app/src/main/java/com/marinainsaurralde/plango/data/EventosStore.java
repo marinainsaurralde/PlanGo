@@ -14,6 +14,7 @@ public final class EventosStore {
     private List<Evento> eventos = Collections.emptyList();
     private FiltroEventos.Criterios criterios = FiltroEventos.Criterios.porDefecto();
     private boolean loaded;
+    private long lastUpdatedMillis;
 
     private EventosStore() {
     }
@@ -25,6 +26,7 @@ public final class EventosStore {
     public synchronized void setEventos(List<Evento> nuevosEventos) {
         eventos = Collections.unmodifiableList(new ArrayList<>(nuevosEventos));
         loaded = true;
+        lastUpdatedMillis = System.currentTimeMillis();
     }
 
     public synchronized List<Evento> getEventos() {
@@ -34,6 +36,8 @@ public final class EventosStore {
     public synchronized boolean isLoaded() {
         return loaded;
     }
+
+    public synchronized long getLastUpdatedMillis() { return lastUpdatedMillis; }
 
     public synchronized FiltroEventos.Criterios getCriterios() {
         return criterios;

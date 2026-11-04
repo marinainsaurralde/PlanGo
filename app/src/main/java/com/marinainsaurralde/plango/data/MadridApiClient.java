@@ -163,6 +163,7 @@ public class MadridApiClient {
                 continue;
             }
 
+            Boolean gratuito = parseNullableBoolean(record.opt("GRATUITO"));
             eventos.add(new Evento(
                     nullableString(record, "ID-EVENTO"),
                     nullableString(record, "TITULO"),
@@ -170,7 +171,8 @@ public class MadridApiClient {
                     nullableString(record, "FECHA-FIN"),
                     nullableString(record, "DISTRITO-INSTALACION"),
                     nullableString(record, "TIPO"),
-                    parseBoolean(record.opt("GRATUITO")),
+                    Boolean.TRUE.equals(gratuito),
+                    gratuito != null,
                     nullableDouble(record, "LATITUD"),
                     nullableDouble(record, "LONGITUD"),
                     nullableString(record, "NOMBRE-INSTALACION"),
@@ -193,21 +195,22 @@ public class MadridApiClient {
         return text.isEmpty() ? null : text;
     }
 
-    private static boolean parseBoolean(Object value) {
+    private static Boolean parseNullableBoolean(Object value) {
         if (value instanceof Boolean) {
             return (Boolean) value;
         }
         if (value instanceof Number) {
-            return ((Number) value).intValue() == 1;
+            int number = ((Number) value).intValue();
+            return number == 0 ? Boolean.FALSE : number == 1 ? Boolean.TRUE : null;
         }
         if (value == null || value == JSONObject.NULL) {
-            return false;
+            return null;
         }
         String text = String.valueOf(value).trim();
-        return "1".equals(text)
-                || "true".equalsIgnoreCase(text)
-                || "si".equalsIgnoreCase(text)
-                || "sí".equalsIgnoreCase(text);
+        if ("1".equals(text) || "true".equalsIgnoreCase(text)
+                || "si".equalsIgnoreCase(text) || "sí".equalsIgnoreCase(text)) return true;
+        if ("0".equals(text) || "false".equalsIgnoreCase(text) || "no".equalsIgnoreCase(text)) return false;
+        return null;
     }
 
     private static Double nullableDouble(JSONObject object, String property) {
