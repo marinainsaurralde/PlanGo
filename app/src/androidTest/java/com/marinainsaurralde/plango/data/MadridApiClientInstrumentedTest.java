@@ -29,7 +29,8 @@ public class MadridApiClientInstrumentedTest {
                 + "\"DISTRITO-INSTALACION\":\"CENTRO\","
                 + "\"TIPO\":\"/contenido/actividades/Musica\",\"GRATUITO\":1,"
                 + "\"LATITUD\":\"40.4168\",\"LONGITUD\":\"-3,7038\","
-                + "\"NOMBRE-INSTALACION\":\"Centro Cultural\"},"
+                + "\"NOMBRE-INSTALACION\":\"Centro Cultural\","
+                + "\"DIAS-SEMANA\":\"L,M,X\",\"DIAS-EXCLUIDOS\":\"5/11/2026;\"},"
                 + "{\"ID-EVENTO\":\"456\",\"TITULO\":\"\",\"GRATUITO\":0}"
                 + "]}}";
 
@@ -42,6 +43,7 @@ public class MadridApiClientInstrumentedTest {
         assertTrue(eventos.get(0).isGratuito());
         assertTrue(eventos.get(0).hasValidCoordinates());
         assertEquals("Centro Cultural", eventos.get(0).getNombreInstalacion());
+        assertEquals("L,M,X", eventos.get(0).getDiasSemana());
         assertNull(eventos.get(0).getFechaFin());
         assertNull(eventos.get(1).getTitulo());
         assertFalse(eventos.get(1).isGratuito());

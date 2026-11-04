@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.marinainsaurralde.plango.R;
 import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.model.FiltroEventos;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +60,7 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
         private final TextView date;
         private final TextView district;
         private final TextView freeBadge;
+        private final TextView ongoingBadge;
 
         EventoViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -66,6 +68,7 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
             date = itemView.findViewById(R.id.textEventDate);
             district = itemView.findViewById(R.id.textEventDistrict);
             freeBadge = itemView.findViewById(R.id.textFreeBadge);
+            ongoingBadge = itemView.findViewById(R.id.textOngoingBadge);
         }
 
         void bind(Evento evento, OnEventoClickListener listener) {
@@ -73,9 +76,12 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
                     ? itemView.getContext().getString(R.string.event_without_title)
                     : evento.getTitulo());
 
-            setOptionalText(date, evento.getFechaInicioFormateada());
+            setOptionalText(date, evento.getPeriodoFormateado());
             setOptionalText(district, evento.getDistrito());
             freeBadge.setVisibility(evento.isGratuito() ? View.VISIBLE : View.GONE);
+            ongoingBadge.setVisibility(evento.isEnCurso(FiltroEventos.MADRID_ZONE)
+                    ? View.VISIBLE
+                    : View.GONE);
             itemView.setOnClickListener(view -> listener.onEventoClick(evento));
         }
 

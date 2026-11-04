@@ -43,13 +43,27 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/textListResultCount"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="8dp"
+        android:textColor="@color/plango_text_secondary"
+        android:textSize="13sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/eventsHeader"
+        tools:text="24 eventos encontrados" />
+
     <FrameLayout
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/eventsHeader">
+        app:layout_constraintTop_toBottomOf="@id/textListResultCount">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerEvents"

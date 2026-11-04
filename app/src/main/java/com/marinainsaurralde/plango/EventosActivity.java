@@ -14,16 +14,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.marinainsaurralde.plango.data.MadridApiClient;
+import com.marinainsaurralde.plango.data.EventosStore;
 import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.model.FiltroEventos;
 import com.marinainsaurralde.plango.ui.EventoAdapter;
 
 import java.util.List;
 
 public class EventosActivity extends AppCompatActivity {
 
-    private static final int INITIAL_EVENT_LIMIT = 20;
-    private final MadridApiClient madridApiClient = new MadridApiClient();
+    private final EventosStore eventosStore = EventosStore.getInstance();
     private EventoAdapter eventoAdapter;
 
     @Override
@@ -43,36 +43,34 @@ public class EventosActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.buttonBackToMap).setOnClickListener(view -> finish());
-        findViewById(R.id.buttonRetryEvents).setOnClickListener(view -> loadEvents());
+        findViewById(R.id.buttonRetryEvents).setOnClickListener(view -> finish());
 
         RecyclerView eventsList = findViewById(R.id.recyclerEvents);
         eventsList.setLayoutManager(new LinearLayoutManager(this));
         eventoAdapter = new EventoAdapter(this::openEventDetail);
         eventsList.setAdapter(eventoAdapter);
 
-        loadEvents();
+        showEvents();
     }
 
-    private void loadEvents() {
-        showEventLoading();
-        madridApiClient.obtenerEventos(INITIAL_EVENT_LIMIT, 0, new MadridApiClient.Callback() {
-            @Override
-            public void onSuccess(List<Evento> eventos) {
-                if (isFinishing() || isDestroyed()) {
-                    return;
-                }
-                eventoAdapter.setEventos(eventos);
-                showEventResults(eventos.isEmpty());
-            }
-
-            @Override
-            public void onError(Exception error) {
-                if (isFinishing() || isDestroyed()) {
-                    return;
-                }
-                showEventError();
-            }
-        });
+    private void showEvents() {
+        if (!eventosStore.isLoaded()) {
+            showEventError();
+            return;
+        }
+        List<Evento> eventos = FiltroEventos.aplicar(
+                eventosStore.getEventos(),
+                eventosStore.getCriterios()
+        );
+        eventoAdapter.setEventos(eventos);
+        ((TextView) findViewById(R.id.textListResultCount)).setText(
+                getResources().getQuantityString(
+                        R.plurals.events_found,
+                        eventos.size(),
+                        eventos.size()
+                )
+        );
+        showEventResults(eventos.isEmpty());
     }
 
     private void showEventLoading() {
@@ -105,9 +103,4 @@ public class EventosActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    @Override
-    protected void onDestroy() {
-        madridApiClient.cerrar();
-        super.onDestroy();
-    }
 }

@@ -45,6 +45,8 @@ public class EventUiInstrumentedTest {
         assertEquals("CENTRO",
                 ((TextView) holder.itemView.findViewById(R.id.textEventDistrict)).getText().toString());
         assertEquals(View.VISIBLE, holder.itemView.findViewById(R.id.textFreeBadge).getVisibility());
+        assertEquals("4 nov 2026",
+                ((TextView) holder.itemView.findViewById(R.id.textEventDate)).getText().toString());
 
         holder.itemView.performClick();
         assertSame(evento, clickedEvent.get());
@@ -71,6 +73,8 @@ public class EventUiInstrumentedTest {
                 ((TextView) activity.findViewById(R.id.textDetailFree)).getText().toString());
         assertEquals("Instalación: Centro Cultural",
                 ((TextView) activity.findViewById(R.id.textDetailVenue)).getText().toString());
+        assertEquals("Fechas: 4 nov 2026",
+                ((TextView) activity.findViewById(R.id.textDetailDateRange)).getText().toString());
 
         activity.finish();
     }
@@ -86,7 +90,9 @@ public class EventUiInstrumentedTest {
                 true,
                 40.4168,
                 -3.7038,
-                "Centro Cultural"
+                "Centro Cultural",
+                "L,M,X,J,V,S,D",
+                null
         );
     }
 }

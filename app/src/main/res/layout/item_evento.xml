@@ -45,6 +45,20 @@
             android:textSize="14sp" />
 
         <TextView
+            android:id="@+id/textOngoingBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/background_ongoing_badge"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="3dp"
+            android:text="@string/event_ongoing"
+            android:textColor="@color/plango_primary_dark"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
             android:id="@+id/textFreeBadge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

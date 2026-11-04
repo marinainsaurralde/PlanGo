@@ -52,8 +52,12 @@ public class DetalleEventoActivity extends AppCompatActivity {
                         : evento.getTitulo()
         );
         setOptionalField(R.id.textDetailId, R.string.event_id, evento.getIdentificador());
-        setOptionalField(R.id.textDetailStart, R.string.event_start, evento.getFechaInicioFormateada());
-        setOptionalField(R.id.textDetailEnd, R.string.event_end, evento.getFechaFinFormateada());
+        setOptionalField(R.id.textDetailDateRange, R.string.event_dates, evento.getPeriodoFormateado());
+        findViewById(R.id.textDetailOngoing).setVisibility(
+                evento.isEnCurso(com.marinainsaurralde.plango.model.FiltroEventos.MADRID_ZONE)
+                        ? View.VISIBLE
+                        : View.GONE
+        );
         setOptionalField(R.id.textDetailDistrict, R.string.event_district, evento.getDistrito());
         setOptionalField(R.id.textDetailVenue, R.string.event_venue, evento.getNombreInstalacion());
         setOptionalField(R.id.textDetailType, R.string.event_type, evento.getTipo());

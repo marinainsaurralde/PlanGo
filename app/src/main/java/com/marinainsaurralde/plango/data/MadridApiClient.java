@@ -29,6 +29,7 @@ public class MadridApiClient {
     private static final String RESOURCE_ID =
             "300107-2-agenda-actividades-eventos-csv";
     private static final int TIMEOUT_MILLIS = 15_000;
+    private static final int DEFAULT_PAGE_SIZE = 500;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -55,11 +56,41 @@ public class MadridApiClient {
         });
     }
 
+    public void obtenerTodosLosEventos(Callback callback) {
+        executor.execute(() -> {
+            try {
+                List<Evento> allEvents = new ArrayList<>();
+                int offset = 0;
+                int total = Integer.MAX_VALUE;
+                while (!Thread.currentThread().isInterrupted()) {
+                    ApiPage page = requestPage(DEFAULT_PAGE_SIZE, offset);
+                    if (page.events.isEmpty() && offset < page.total) {
+                        throw new IOException("La API devolvió una página incompleta");
+                    }
+                    allEvents.addAll(page.events);
+                    total = page.total;
+                    offset += page.events.size();
+                    if (offset >= total) {
+                        mainHandler.post(() -> callback.onSuccess(allEvents));
+                        return;
+                    }
+                }
+            } catch (IOException | JSONException error) {
+                mainHandler.post(() -> callback.onError(error));
+            }
+        });
+    }
+
     public void cerrar() {
         executor.shutdownNow();
     }
 
     private List<Evento> requestEvents(int limit, int offset)
+            throws IOException, JSONException {
+        return requestPage(limit, offset).events;
+    }
+
+    private ApiPage requestPage(int limit, int offset)
             throws IOException, JSONException {
         String requestUrl = String.format(
                 Locale.ROOT,
@@ -84,7 +115,11 @@ public class MadridApiClient {
             }
 
             String responseBody = readBody(connection.getInputStream());
-            return parseEvents(responseBody);
+            JSONObject root = new JSONObject(responseBody);
+            List<Evento> events = parseEvents(root);
+            JSONObject result = root.getJSONObject("result");
+            int total = result.optInt("total", offset + events.size());
+            return new ApiPage(events, Math.max(total, offset + events.size()));
         } finally {
             connection.disconnect();
         }
@@ -103,7 +138,10 @@ public class MadridApiClient {
     }
 
     static List<Evento> parseEvents(String json) throws JSONException {
-        JSONObject root = new JSONObject(json);
+        return parseEvents(new JSONObject(json));
+    }
+
+    private static List<Evento> parseEvents(JSONObject root) throws JSONException {
         if (!root.optBoolean("success", false)) {
             throw new JSONException("La API indicó que la consulta no fue correcta");
         }
@@ -135,7 +173,9 @@ public class MadridApiClient {
                     parseBoolean(record.opt("GRATUITO")),
                     nullableDouble(record, "LATITUD"),
                     nullableDouble(record, "LONGITUD"),
-                    nullableString(record, "NOMBRE-INSTALACION")
+                    nullableString(record, "NOMBRE-INSTALACION"),
+                    nullableString(record, "DIAS-SEMANA"),
+                    nullableString(record, "DIAS-EXCLUIDOS")
             ));
         }
         return eventos;
@@ -181,6 +221,16 @@ public class MadridApiClient {
             return Double.isFinite(number) ? number : null;
         } catch (NumberFormatException ignored) {
             return null;
+        }
+    }
+
+    private static final class ApiPage {
+        private final List<Evento> events;
+        private final int total;
+
+        private ApiPage(List<Evento> events, int total) {
+            this.events = events;
+            this.total = total;
         }
     }
 }

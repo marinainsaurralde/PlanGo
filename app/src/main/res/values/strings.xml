@@ -21,6 +21,8 @@
     <string name="event_id">Identificador: %1$s</string>
     <string name="event_start">Fecha de inicio: %1$s</string>
     <string name="event_end">Fecha de finalización: %1$s</string>
+    <string name="event_dates">Fechas: %1$s</string>
+    <string name="event_ongoing">En curso</string>
     <string name="event_district">Distrito: %1$s</string>
     <string name="event_venue">Instalación: %1$s</string>
     <string name="event_type">Tipo de actividad: %1$s</string>
@@ -30,4 +32,18 @@
     <string name="view_list">Ver listado</string>
     <string name="back_to_map">Mapa</string>
     <string name="map_events_error">El mapa está disponible, pero no hemos podido cargar los eventos.</string>
+    <string name="filter_all_dates">Todos</string>
+    <string name="filter_today">Hoy</string>
+    <string name="filter_weekend">Fin de semana</string>
+    <string name="filter_next_7_days">Próximos 7 días</string>
+    <string name="filter_district">Distrito</string>
+    <string name="filter_free_only">Solo gratis</string>
+    <string name="all_districts">Todos los distritos</string>
+    <string name="district_sheet_title">¿Dónde hacemos planes?</string>
+    <string name="search_districts">Buscar distrito</string>
+    <string name="no_filtered_events">No hay eventos que coincidan con los filtros seleccionados.</string>
+    <plurals name="events_found">
+        <item quantity="one">%d evento encontrado</item>
+        <item quantity="other">%d eventos encontrados</item>
+    </plurals>
 </resources>
