@@ -1,4 +1,4 @@
-package com.example.plango;
+package com.marinainsaurralde.plango;
 
 import org.junit.Test;
 

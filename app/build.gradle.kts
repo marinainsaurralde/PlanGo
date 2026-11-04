@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.plango"
+    namespace = "com.marinainsaurralde.plango"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.plango"
+        applicationId = "com.marinainsaurralde.plango"
         minSdk = 26
         targetSdk = 37
         versionCode = 1

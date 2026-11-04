@@ -1,4 +1,4 @@
-package com.example.plango;
+package com.marinainsaurralde.plango;
 
 import android.os.Bundle;
 
