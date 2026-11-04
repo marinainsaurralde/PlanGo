@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.ErrorCodes;
@@ -21,10 +23,19 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.marinainsaurralde.plango.data.MadridApiClient;
+import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.ui.EventoAdapter;
 
 import java.util.Collections;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final int INITIAL_EVENT_LIMIT = 20;
+    private final MadridApiClient madridApiClient = new MadridApiClient();
+    private EventoAdapter eventoAdapter;
+    private boolean eventsRequested;
 
     private final ActivityResultLauncher<Intent> signInLauncher =
             registerForActivityResult(
@@ -44,6 +55,12 @@ public class MainActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.buttonSignOut).setOnClickListener(view -> signOut());
+        findViewById(R.id.buttonRetryEvents).setOnClickListener(view -> loadEvents());
+
+        RecyclerView eventsList = findViewById(R.id.recyclerEvents);
+        eventsList.setLayoutManager(new LinearLayoutManager(this));
+        eventoAdapter = new EventoAdapter(this::openEventDetail);
+        eventsList.setAdapter(eventoAdapter);
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -116,12 +133,17 @@ public class MainActivity extends AppCompatActivity {
                 ? getString(R.string.authenticated_user)
                 : getString(R.string.authenticated_as, email));
         findViewById(R.id.buttonSignOut).setVisibility(View.VISIBLE);
+        findViewById(R.id.authenticatedContent).setVisibility(View.VISIBLE);
+        if (!eventsRequested) {
+            loadEvents();
+        }
     }
 
     private void showSignedOutUi() {
         ((TextView) findViewById(R.id.textAuthenticationStatus))
                 .setText(R.string.authentication_required);
         findViewById(R.id.buttonSignOut).setVisibility(View.GONE);
+        findViewById(R.id.authenticatedContent).setVisibility(View.GONE);
     }
 
     private void showAuthenticationMessage(int message, boolean allowRetry) {
@@ -132,5 +154,64 @@ public class MainActivity extends AppCompatActivity {
             snackbar.setDuration(Snackbar.LENGTH_LONG);
         }
         snackbar.show();
+    }
+
+    private void loadEvents() {
+        eventsRequested = true;
+        showEventLoading();
+        madridApiClient.obtenerEventos(INITIAL_EVENT_LIMIT, 0, new MadridApiClient.Callback() {
+            @Override
+            public void onSuccess(List<Evento> eventos) {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                eventoAdapter.setEventos(eventos);
+                showEventResults(eventos.isEmpty());
+            }
+
+            @Override
+            public void onError(Exception error) {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                showEventError();
+            }
+        });
+    }
+
+    private void showEventLoading() {
+        findViewById(R.id.progressEvents).setVisibility(View.VISIBLE);
+        findViewById(R.id.recyclerEvents).setVisibility(View.GONE);
+        findViewById(R.id.layoutEventState).setVisibility(View.GONE);
+    }
+
+    private void showEventResults(boolean empty) {
+        findViewById(R.id.progressEvents).setVisibility(View.GONE);
+        findViewById(R.id.recyclerEvents).setVisibility(empty ? View.GONE : View.VISIBLE);
+        findViewById(R.id.layoutEventState).setVisibility(empty ? View.VISIBLE : View.GONE);
+        if (empty) {
+            ((TextView) findViewById(R.id.textEventState)).setText(R.string.no_events);
+            findViewById(R.id.buttonRetryEvents).setVisibility(View.GONE);
+        }
+    }
+
+    private void showEventError() {
+        findViewById(R.id.progressEvents).setVisibility(View.GONE);
+        findViewById(R.id.recyclerEvents).setVisibility(View.GONE);
+        findViewById(R.id.layoutEventState).setVisibility(View.VISIBLE);
+        ((TextView) findViewById(R.id.textEventState)).setText(R.string.events_connection_error);
+        findViewById(R.id.buttonRetryEvents).setVisibility(View.VISIBLE);
+    }
+
+    private void openEventDetail(Evento evento) {
+        Intent intent = new Intent(this, DetalleEventoActivity.class);
+        intent.putExtra(DetalleEventoActivity.EXTRA_EVENTO, evento);
+        startActivity(intent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        madridApiClient.cerrar();
+        super.onDestroy();
     }
 }

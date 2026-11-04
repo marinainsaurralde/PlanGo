@@ -17,6 +17,12 @@
 
     <style name="Theme.PlanGo" parent="Base.Theme.PlanGo" />
 
+    <style name="TextAppearance.PlanGo.DetailField" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:layout_marginTop">14dp</item>
+        <item name="android:textColor">@color/plango_text</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
     <style name="Theme.PlanGo.FirebaseUI" parent="FirebaseUI">
         <item name="colorPrimary">@color/plango_primary</item>
         <item name="colorPrimaryVariant">@color/plango_primary_dark</item>

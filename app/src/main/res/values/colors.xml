@@ -8,4 +8,6 @@
     <color name="plango_coral">#FF8066</color>
     <color name="plango_background">#F8FAFC</color>
     <color name="plango_text">#1F2937</color>
+    <color name="plango_text_secondary">#5F6B7A</color>
+    <color name="plango_card_stroke">#DCE4EA</color>
 </resources>
