@@ -1,9 +1,31 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.PlanGo" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <style name="Base.Theme.PlanGo" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/plango_primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/plango_turquoise</item>
+        <item name="colorOnSecondary">@color/plango_text</item>
+        <item name="colorTertiary">@color/plango_coral</item>
+        <item name="colorOnTertiary">@color/plango_text</item>
+        <item name="android:colorBackground">@color/plango_background</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/plango_text</item>
+        <item name="android:statusBarColor">@color/plango_background</item>
+        <item name="android:navigationBarColor">@color/plango_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 
     <style name="Theme.PlanGo" parent="Base.Theme.PlanGo" />
+
+    <style name="Theme.PlanGo.FirebaseUI" parent="FirebaseUI">
+        <item name="colorPrimary">@color/plango_primary</item>
+        <item name="colorPrimaryVariant">@color/plango_primary_dark</item>
+        <item name="colorAccent">@color/plango_coral</item>
+        <item name="android:colorBackground">@color/plango_background</item>
+        <item name="android:textColorPrimary">@color/plango_text</item>
+        <item name="android:statusBarColor">@color/plango_primary_dark</item>
+        <item name="android:navigationBarColor">@color/plango_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
 </resources>

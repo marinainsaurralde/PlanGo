@@ -2,4 +2,10 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="plango_primary">#176B87</color>
+    <color name="plango_primary_dark">#0F4C5C</color>
+    <color name="plango_turquoise">#64CCC5</color>
+    <color name="plango_coral">#FF8066</color>
+    <color name="plango_background">#F8FAFC</color>
+    <color name="plango_text">#1F2937</color>
 </resources>
