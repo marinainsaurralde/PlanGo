@@ -59,4 +59,5 @@
         <item quantity="one">%d evento encontrado</item>
         <item quantity="other">%d eventos encontrados</item>
     </plurals>
+    <string name="events_marker_count">%1$d eventos en esta ubicación</string><string name="shared_location">Ubicación compartida</string><plurals name="events_at_location"><item quantity="one">%d evento en esta ubicación</item><item quantity="other">%d eventos en esta ubicación</item></plurals>
 </resources>

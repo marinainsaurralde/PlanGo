@@ -38,11 +38,16 @@ import com.marinainsaurralde.plango.data.MadridApiClient;
 import com.marinainsaurralde.plango.data.EventosStore;
 import com.marinainsaurralde.plango.data.ConsultasRepository;
 import com.marinainsaurralde.plango.data.ConsultaEstadisticas;
+import com.marinainsaurralde.plango.data.AgrupadorEventos;
+import com.marinainsaurralde.plango.data.FavoritosRepository;
 import com.marinainsaurralde.plango.model.Evento;
 import com.marinainsaurralde.plango.model.ConsultaHistorial;
+import com.marinainsaurralde.plango.model.GrupoUbicacion;
 import com.marinainsaurralde.plango.model.FiltroEventos;
 import com.marinainsaurralde.plango.ui.DistritoAdapter;
 import com.marinainsaurralde.plango.ui.FiltrosViewBinder;
+import com.marinainsaurralde.plango.ui.MarkerIconFactory;
+import com.marinainsaurralde.plango.ui.EventoAdapter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -66,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
     private FiltrosViewBinder filtrosViewBinder;
     private List<String> availableDistricts = Collections.emptyList();
     private boolean downloadInProgress;
+    private final MarkerIconFactory markerIconFactory = new MarkerIconFactory();
 
     private final ActivityResultLauncher<Intent> signInLauncher =
             registerForActivityResult(
@@ -207,9 +213,14 @@ public class MainActivity extends AppCompatActivity {
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(MADRID_CENTER, MADRID_ZOOM));
         googleMap.setOnInfoWindowClickListener(marker -> {
             Object tag = marker.getTag();
-            if (tag instanceof Evento) {
-                openEventDetail((Evento) tag);
+            if (tag instanceof GrupoUbicacion && ((GrupoUbicacion) tag).size() == 1) {
+                openEventDetail(((GrupoUbicacion) tag).getFirst());
             }
+        });
+        googleMap.setOnMarkerClickListener(marker -> {
+            Object tag=marker.getTag();
+            if(tag instanceof GrupoUbicacion && ((GrupoUbicacion)tag).size()>1){showLocationBottomSheet((GrupoUbicacion)tag);return true;}
+            return false;
         });
         renderEventMarkers();
     }
@@ -355,23 +366,68 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         googleMap.clear();
-        for (Evento evento : mapEvents) {
-            if (!evento.hasValidCoordinates()) {
-                continue;
-            }
+        for (GrupoUbicacion grupo : AgrupadorEventos.agrupar(mapEvents)) {
+            Evento evento=grupo.getFirst();
             MarkerOptions options = new MarkerOptions()
-                    .position(new LatLng(evento.getLatitud(), evento.getLongitud()))
-                    .title(evento.getTitulo() == null
-                            ? getString(R.string.event_without_title)
-                            : evento.getTitulo());
-            if (evento.getNombreInstalacion() != null) {
-                options.snippet(evento.getNombreInstalacion());
+                    .position(new LatLng(grupo.getLatitud(), grupo.getLongitud()));
+            if(grupo.size()>1){options.title(getString(R.string.events_marker_count,grupo.size())).icon(markerIconFactory.group(grupo.size()));}
+            else {
+                options.title(evento.getTitulo()==null?getString(R.string.event_without_title):evento.getTitulo())
+                        .icon(markerIconFactory.single(AgrupadorEventos.categoria(evento)));
+                List<String> details=new ArrayList<>();if(evento.getNombreInstalacion()!=null)details.add(evento.getNombreInstalacion());if(evento.getPeriodoFormateado()!=null)details.add(evento.getPeriodoFormateado());if(evento.isEnCurso(FiltroEventos.MADRID_ZONE))details.add(getString(R.string.event_ongoing));if(!details.isEmpty())options.snippet(String.join("\n",details));
             }
             Marker marker = googleMap.addMarker(options);
-            if (marker != null) {
-                marker.setTag(evento);
-            }
+            if (marker != null) marker.setTag(grupo);
         }
+    }
+
+    private void showLocationBottomSheet(GrupoUbicacion grupo) {
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View content = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_location, null);
+        dialog.setContentView(content);
+        TextView title = content.findViewById(R.id.textLocationTitle);
+        title.setText(grupo.getInstalacion() == null
+                ? getString(R.string.shared_location)
+                : grupo.getInstalacion());
+        ((TextView) content.findViewById(R.id.textLocationCount)).setText(
+                getResources().getQuantityString(
+                        R.plurals.events_at_location, grupo.size(), grupo.size()));
+
+        FavoritosRepository repository = FavoritosRepository.getInstance();
+        EventoAdapter adapter = new EventoAdapter(
+                evento -> {
+                    dialog.dismiss();
+                    openEventDetail(evento);
+                },
+                evento -> repository.toggle(evento, error -> Snackbar.make(
+                        content,
+                        R.string.favorite_operation_error,
+                        Snackbar.LENGTH_LONG
+                ).show())
+        );
+        adapter.setEventos(grupo.getEventos());
+
+        FavoritosRepository.Listener favoritesListener = new FavoritosRepository.Listener() {
+            @Override
+            public void onFavoritosChanged() {
+                adapter.setFavoriteState(
+                        repository.getFavoriteIds(),
+                        repository.getPendingIds());
+            }
+
+            @Override
+            public void onFavoritosError(Exception error) {
+                Snackbar.make(content, R.string.favorite_operation_error,
+                        Snackbar.LENGTH_LONG).show();
+            }
+        };
+        repository.addListener(favoritesListener);
+        dialog.setOnDismissListener(ignored -> repository.removeListener(favoritesListener));
+
+        RecyclerView list = content.findViewById(R.id.recyclerLocationEvents);
+        list.setLayoutManager(new LinearLayoutManager(this));
+        list.setAdapter(adapter);
+        dialog.show();
     }
 
     private void showMapLoading() {
