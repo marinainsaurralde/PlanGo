@@ -175,7 +175,10 @@ public class MadridApiClient {
                     nullableDouble(record, "LONGITUD"),
                     nullableString(record, "NOMBRE-INSTALACION"),
                     nullableString(record, "DIAS-SEMANA"),
-                    nullableString(record, "DIAS-EXCLUIDOS")
+                    nullableString(record, "DIAS-EXCLUIDOS"),
+                    nullableString(record, "HORA"),
+                    nullableString(record, "PRECIO"),
+                    nullableString(record, "CONTENT-URL")
             ));
         }
         return eventos;

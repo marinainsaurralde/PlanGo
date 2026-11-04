@@ -12,10 +12,19 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.data.FavoritosRepository;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.snackbar.Snackbar;
 
 public class DetalleEventoActivity extends AppCompatActivity {
 
     public static final String EXTRA_EVENTO = "com.marinainsaurralde.plango.EVENTO";
+    private final FavoritosRepository favoritosRepository = FavoritosRepository.getInstance();
+    private Evento evento;
+    private final FavoritosRepository.Listener favoritosListener = new FavoritosRepository.Listener() {
+        @Override public void onFavoritosChanged() { updateFavoriteButton(); }
+        @Override public void onFavoritosError(Exception error) { showFavoriteError(); }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,7 +40,6 @@ public class DetalleEventoActivity extends AppCompatActivity {
 
         findViewById(R.id.buttonBack).setOnClickListener(view -> finish());
 
-        Evento evento;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             evento = getIntent().getSerializableExtra(EXTRA_EVENTO, Evento.class);
         } else {
@@ -42,7 +50,37 @@ public class DetalleEventoActivity extends AppCompatActivity {
             finish();
             return;
         }
+        findViewById(R.id.buttonDetailFavorite).setOnClickListener(view ->
+                favoritosRepository.toggle(evento, error -> showFavoriteError()));
         showEvent(evento);
+    }
+
+    private void updateFavoriteButton() {
+        if (evento == null) return;
+        boolean favorite = favoritosRepository.isFavorito(evento.getIdentificador());
+        boolean pending = favoritosRepository.isPending(evento.getIdentificador());
+        MaterialButton button = findViewById(R.id.buttonDetailFavorite);
+        button.setIconResource(favorite
+                ? R.drawable.ic_favorite_filled_24
+                : R.drawable.ic_favorite_border_24);
+        button.setContentDescription(getString(
+                favorite ? R.string.remove_from_plans : R.string.add_to_plans));
+        button.setEnabled(!pending && evento.getIdentificador() != null);
+    }
+
+    private void showFavoriteError() {
+        Snackbar.make(findViewById(R.id.detailRoot),
+                R.string.favorite_operation_error, Snackbar.LENGTH_LONG).show();
+    }
+
+    @Override protected void onStart() {
+        super.onStart();
+        favoritosRepository.addListener(favoritosListener);
+    }
+
+    @Override protected void onStop() {
+        favoritosRepository.removeListener(favoritosListener);
+        super.onStop();
     }
 
     private void showEvent(Evento evento) {
@@ -60,7 +98,10 @@ public class DetalleEventoActivity extends AppCompatActivity {
         );
         setOptionalField(R.id.textDetailDistrict, R.string.event_district, evento.getDistrito());
         setOptionalField(R.id.textDetailVenue, R.string.event_venue, evento.getNombreInstalacion());
+        setOptionalField(R.id.textDetailTime, R.string.event_time, evento.getHora());
+        setOptionalField(R.id.textDetailPrice, R.string.event_price, evento.getPrecio());
         setOptionalField(R.id.textDetailType, R.string.event_type, evento.getTipo());
+        setOptionalField(R.id.textDetailUrl, R.string.event_url, evento.getUrlOficial());
         TextView coordinates = findViewById(R.id.textDetailCoordinates);
         coordinates.setVisibility(evento.hasValidCoordinates() ? View.VISIBLE : View.GONE);
         if (evento.hasValidCoordinates()) {

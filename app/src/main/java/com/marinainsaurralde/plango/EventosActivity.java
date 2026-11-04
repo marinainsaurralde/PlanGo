@@ -15,16 +15,23 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.marinainsaurralde.plango.data.EventosStore;
+import com.marinainsaurralde.plango.data.FavoritosRepository;
 import com.marinainsaurralde.plango.model.Evento;
 import com.marinainsaurralde.plango.model.FiltroEventos;
 import com.marinainsaurralde.plango.ui.EventoAdapter;
 
 import java.util.List;
+import com.google.android.material.snackbar.Snackbar;
 
 public class EventosActivity extends AppCompatActivity {
 
     private final EventosStore eventosStore = EventosStore.getInstance();
     private EventoAdapter eventoAdapter;
+    private final FavoritosRepository favoritosRepository = FavoritosRepository.getInstance();
+    private final FavoritosRepository.Listener favoritosListener = new FavoritosRepository.Listener() {
+        @Override public void onFavoritosChanged() { updateFavoriteState(); }
+        @Override public void onFavoritosError(Exception error) { showFavoriteError(); }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,10 +54,37 @@ public class EventosActivity extends AppCompatActivity {
 
         RecyclerView eventsList = findViewById(R.id.recyclerEvents);
         eventsList.setLayoutManager(new LinearLayoutManager(this));
-        eventoAdapter = new EventoAdapter(this::openEventDetail);
+        eventoAdapter = new EventoAdapter(this::openEventDetail, this::toggleFavorite);
         eventsList.setAdapter(eventoAdapter);
 
         showEvents();
+    }
+
+    private void toggleFavorite(Evento evento) {
+        favoritosRepository.toggle(evento, error -> showFavoriteError());
+    }
+
+    private void updateFavoriteState() {
+        if (eventoAdapter != null) {
+            eventoAdapter.setFavoriteState(
+                    favoritosRepository.getFavoriteIds(),
+                    favoritosRepository.getPendingIds());
+        }
+    }
+
+    private void showFavoriteError() {
+        Snackbar.make(findViewById(R.id.eventsRoot),
+                R.string.favorite_operation_error, Snackbar.LENGTH_LONG).show();
+    }
+
+    @Override protected void onStart() {
+        super.onStart();
+        favoritosRepository.addListener(favoritosListener);
+    }
+
+    @Override protected void onStop() {
+        favoritosRepository.removeListener(favoritosListener);
+        super.onStop();
     }
 
     private void showEvents() {

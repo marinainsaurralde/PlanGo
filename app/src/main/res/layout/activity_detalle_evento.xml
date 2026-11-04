@@ -18,6 +18,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonDetailFavorite"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        app:icon="@drawable/ic_favorite_border_24"
+        app:iconTint="@color/plango_coral"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -88,6 +100,18 @@
                 android:layout_height="wrap_content" />
 
             <TextView
+                android:id="@+id/textDetailTime"
+                style="@style/TextAppearance.PlanGo.DetailField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/textDetailPrice"
+                style="@style/TextAppearance.PlanGo.DetailField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
                 android:id="@+id/textDetailType"
                 style="@style/TextAppearance.PlanGo.DetailField"
                 android:layout_width="match_parent"
@@ -98,6 +122,14 @@
                 style="@style/TextAppearance.PlanGo.DetailField"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/textDetailUrl"
+                style="@style/TextAppearance.PlanGo.DetailField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autoLink="web"
+                android:linksClickable="true" />
 
             <TextView
                 android:id="@+id/textDetailFree"

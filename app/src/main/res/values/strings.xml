@@ -25,6 +25,9 @@
     <string name="event_ongoing">En curso</string>
     <string name="event_district">Distrito: %1$s</string>
     <string name="event_venue">Instalación: %1$s</string>
+    <string name="event_time">Hora: %1$s</string>
+    <string name="event_price">Precio: %1$s</string>
+    <string name="event_url">Información oficial: %1$s</string>
     <string name="event_type">Tipo de actividad: %1$s</string>
     <string name="event_coordinates">Coordenadas: %1$.5f, %2$.5f</string>
     <string name="event_free_yes">Gratuito: Sí</string>
@@ -41,6 +44,15 @@
     <string name="all_districts">Todos los distritos</string>
     <string name="district_sheet_title">¿Dónde hacemos planes?</string>
     <string name="search_districts">Buscar distrito</string>
+    <string name="my_plans">Mis planes</string>
+    <string name="my_plans_title">Mis planes</string>
+    <string name="add_to_plans">Añadir a Mis planes</string>
+    <string name="remove_from_plans">Eliminar de Mis planes</string>
+    <string name="favorite_operation_error">No se ha podido actualizar Mis planes. Inténtalo de nuevo.</string>
+    <string name="favorites_loading">Cargando tus planes</string>
+    <string name="no_favorites">Todavía no has guardado ningún plan.</string>
+    <string name="favorites_load_error">No hemos podido cargar tus planes.</string>
+    <string name="event_finished">Finalizado</string>
     <string name="no_filtered_events">No hay eventos que coincidan con los filtros seleccionados.</string>
     <plurals name="events_found">
         <item quantity="one">%d evento encontrado</item>

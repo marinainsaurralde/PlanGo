@@ -20,13 +20,32 @@
         android:orientation="vertical"
         android:padding="18dp">
 
-        <TextView
-            android:id="@+id/textEventTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/plango_text"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textEventTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/plango_text"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonFavorite"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:visibility="gone"
+                app:icon="@drawable/ic_favorite_border_24"
+                app:iconTint="@color/plango_coral" />
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/textEventDate"
@@ -71,6 +90,20 @@
             android:text="@string/free"
             android:textColor="@color/plango_text"
             android:textSize="13sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/textFinishedBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/background_finished_badge"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:text="@string/event_finished"
+            android:textColor="@color/plango_text_secondary"
+            android:textSize="12sp"
             android:textStyle="bold"
             android:visibility="gone" />
 

@@ -28,6 +28,9 @@ public class Evento implements Serializable {
     private final String nombreInstalacion;
     private final String diasSemana;
     private final String diasExcluidos;
+    private final String hora;
+    private final String precio;
+    private final String urlOficial;
 
     public Evento(
             String identificador,
@@ -43,6 +46,28 @@ public class Evento implements Serializable {
             String diasSemana,
             String diasExcluidos
     ) {
+        this(identificador, titulo, fechaInicio, fechaFin, distrito, tipo, gratuito,
+                latitud, longitud, nombreInstalacion, diasSemana, diasExcluidos,
+                null, null, null);
+    }
+
+    public Evento(
+            String identificador,
+            String titulo,
+            String fechaInicio,
+            String fechaFin,
+            String distrito,
+            String tipo,
+            boolean gratuito,
+            Double latitud,
+            Double longitud,
+            String nombreInstalacion,
+            String diasSemana,
+            String diasExcluidos,
+            String hora,
+            String precio,
+            String urlOficial
+    ) {
         this.identificador = identificador;
         this.titulo = titulo;
         this.fechaInicio = fechaInicio;
@@ -55,6 +80,9 @@ public class Evento implements Serializable {
         this.nombreInstalacion = nombreInstalacion;
         this.diasSemana = diasSemana;
         this.diasExcluidos = diasExcluidos;
+        this.hora = hora;
+        this.precio = precio;
+        this.urlOficial = urlOficial;
     }
 
     public String getIdentificador() {
@@ -103,6 +131,18 @@ public class Evento implements Serializable {
 
     public String getDiasExcluidos() {
         return diasExcluidos;
+    }
+
+    public String getHora() {
+        return hora;
+    }
+
+    public String getPrecio() {
+        return precio;
+    }
+
+    public String getUrlOficial() {
+        return urlOficial;
     }
 
     public LocalDateTime getFechaInicioParsed() {
@@ -156,6 +196,11 @@ public class Evento implements Serializable {
             return false;
         }
         return start.isBefore(today) && !end.isBefore(today);
+    }
+
+    public boolean isFinalizado(ZoneId zoneId) {
+        LocalDate end = toLocalDate(getFechaFinParsed());
+        return end != null && end.isBefore(LocalDate.now(zoneId));
     }
 
     private static String formatDate(String value) {

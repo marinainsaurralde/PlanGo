@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
     implementation(libs.firebase.ui.auth)
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)

@@ -80,6 +80,9 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.buttonViewList).setOnClickListener(
                 view -> startActivity(new Intent(this, EventosActivity.class))
         );
+        findViewById(R.id.buttonMyPlans).setOnClickListener(
+                view -> startActivity(new Intent(this, MisPlanesActivity.class))
+        );
         findViewById(R.id.buttonRetryMapEvents).setOnClickListener(view -> loadMapEvents());
         setupFilters();
         findViewById(R.id.buttonDistrict).setOnClickListener(view -> showDistrictBottomSheet());
