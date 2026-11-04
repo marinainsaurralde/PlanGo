@@ -22,7 +22,12 @@
     <string name="event_start">Fecha de inicio: %1$s</string>
     <string name="event_end">Fecha de finalización: %1$s</string>
     <string name="event_district">Distrito: %1$s</string>
+    <string name="event_venue">Instalación: %1$s</string>
     <string name="event_type">Tipo de actividad: %1$s</string>
+    <string name="event_coordinates">Coordenadas: %1$.5f, %2$.5f</string>
     <string name="event_free_yes">Gratuito: Sí</string>
     <string name="event_free_no">Gratuito: No</string>
+    <string name="view_list">Ver listado</string>
+    <string name="back_to_map">Mapa</string>
+    <string name="map_events_error">El mapa está disponible, pero no hemos podido cargar los eventos.</string>
 </resources>

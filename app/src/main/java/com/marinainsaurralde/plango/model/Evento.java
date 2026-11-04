@@ -21,6 +21,9 @@ public class Evento implements Serializable {
     private final String distrito;
     private final String tipo;
     private final boolean gratuito;
+    private final Double latitud;
+    private final Double longitud;
+    private final String nombreInstalacion;
 
     public Evento(
             String identificador,
@@ -29,7 +32,10 @@ public class Evento implements Serializable {
             String fechaFin,
             String distrito,
             String tipo,
-            boolean gratuito
+            boolean gratuito,
+            Double latitud,
+            Double longitud,
+            String nombreInstalacion
     ) {
         this.identificador = identificador;
         this.titulo = titulo;
@@ -38,6 +44,9 @@ public class Evento implements Serializable {
         this.distrito = distrito;
         this.tipo = tipo;
         this.gratuito = gratuito;
+        this.latitud = latitud;
+        this.longitud = longitud;
+        this.nombreInstalacion = nombreInstalacion;
     }
 
     public String getIdentificador() {
@@ -66,6 +75,27 @@ public class Evento implements Serializable {
 
     public boolean isGratuito() {
         return gratuito;
+    }
+
+    public Double getLatitud() {
+        return latitud;
+    }
+
+    public Double getLongitud() {
+        return longitud;
+    }
+
+    public String getNombreInstalacion() {
+        return nombreInstalacion;
+    }
+
+    public boolean hasValidCoordinates() {
+        return latitud != null
+                && longitud != null
+                && latitud >= -90
+                && latitud <= 90
+                && longitud >= -180
+                && longitud <= 180;
     }
 
     public String getFechaInicioFormateada() {

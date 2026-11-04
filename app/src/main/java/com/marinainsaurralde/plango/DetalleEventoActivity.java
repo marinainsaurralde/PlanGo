@@ -55,7 +55,17 @@ public class DetalleEventoActivity extends AppCompatActivity {
         setOptionalField(R.id.textDetailStart, R.string.event_start, evento.getFechaInicioFormateada());
         setOptionalField(R.id.textDetailEnd, R.string.event_end, evento.getFechaFinFormateada());
         setOptionalField(R.id.textDetailDistrict, R.string.event_district, evento.getDistrito());
+        setOptionalField(R.id.textDetailVenue, R.string.event_venue, evento.getNombreInstalacion());
         setOptionalField(R.id.textDetailType, R.string.event_type, evento.getTipo());
+        TextView coordinates = findViewById(R.id.textDetailCoordinates);
+        coordinates.setVisibility(evento.hasValidCoordinates() ? View.VISIBLE : View.GONE);
+        if (evento.hasValidCoordinates()) {
+            coordinates.setText(getString(
+                    R.string.event_coordinates,
+                    evento.getLatitud(),
+                    evento.getLongitud()
+            ));
+        }
         ((TextView) findViewById(R.id.textDetailFree)).setText(
                 evento.isGratuito() ? R.string.event_free_yes : R.string.event_free_no
         );

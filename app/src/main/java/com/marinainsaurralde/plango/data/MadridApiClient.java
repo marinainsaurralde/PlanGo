@@ -132,7 +132,10 @@ public class MadridApiClient {
                     nullableString(record, "FECHA-FIN"),
                     nullableString(record, "DISTRITO-INSTALACION"),
                     nullableString(record, "TIPO"),
-                    parseBoolean(record.opt("GRATUITO"))
+                    parseBoolean(record.opt("GRATUITO")),
+                    nullableDouble(record, "LATITUD"),
+                    nullableDouble(record, "LONGITUD"),
+                    nullableString(record, "NOMBRE-INSTALACION")
             ));
         }
         return eventos;
@@ -162,5 +165,22 @@ public class MadridApiClient {
                 || "true".equalsIgnoreCase(text)
                 || "si".equalsIgnoreCase(text)
                 || "sí".equalsIgnoreCase(text);
+    }
+
+    private static Double nullableDouble(JSONObject object, String property) {
+        Object value = object.opt(property);
+        if (value == null || value == JSONObject.NULL) {
+            return null;
+        }
+        String text = String.valueOf(value).trim().replace(',', '.');
+        if (text.isEmpty()) {
+            return null;
+        }
+        try {
+            double number = Double.parseDouble(text);
+            return Double.isFinite(number) ? number : null;
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 }

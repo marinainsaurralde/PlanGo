@@ -27,7 +27,9 @@ public class MadridApiClientInstrumentedTest {
                 + "{\"ID-EVENTO\":123,\"TITULO\":\"Concierto\","
                 + "\"FECHA\":\"2026-11-04 18:00:00.0\",\"FECHA-FIN\":null,"
                 + "\"DISTRITO-INSTALACION\":\"CENTRO\","
-                + "\"TIPO\":\"/contenido/actividades/Musica\",\"GRATUITO\":1},"
+                + "\"TIPO\":\"/contenido/actividades/Musica\",\"GRATUITO\":1,"
+                + "\"LATITUD\":\"40.4168\",\"LONGITUD\":\"-3,7038\","
+                + "\"NOMBRE-INSTALACION\":\"Centro Cultural\"},"
                 + "{\"ID-EVENTO\":\"456\",\"TITULO\":\"\",\"GRATUITO\":0}"
                 + "]}}";
 
@@ -38,6 +40,8 @@ public class MadridApiClientInstrumentedTest {
         assertEquals("Concierto", eventos.get(0).getTitulo());
         assertEquals("CENTRO", eventos.get(0).getDistrito());
         assertTrue(eventos.get(0).isGratuito());
+        assertTrue(eventos.get(0).hasValidCoordinates());
+        assertEquals("Centro Cultural", eventos.get(0).getNombreInstalacion());
         assertNull(eventos.get(0).getFechaFin());
         assertNull(eventos.get(1).getTitulo());
         assertFalse(eventos.get(1).isGratuito());
@@ -72,5 +76,7 @@ public class MadridApiClientInstrumentedTest {
         assertNotNull(result.get());
         assertEquals(5, result.get().size());
         assertNotNull(result.get().get(0).getIdentificador());
+        assertTrue("La respuesta real no contiene coordenadas válidas",
+                result.get().stream().anyMatch(Evento::hasValidCoordinates));
     }
 }

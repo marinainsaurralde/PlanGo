@@ -69,6 +69,8 @@ public class EventUiInstrumentedTest {
                 ((TextView) activity.findViewById(R.id.textDetailDistrict)).getText().toString());
         assertEquals("Gratuito: Sí",
                 ((TextView) activity.findViewById(R.id.textDetailFree)).getText().toString());
+        assertEquals("Instalación: Centro Cultural",
+                ((TextView) activity.findViewById(R.id.textDetailVenue)).getText().toString());
 
         activity.finish();
     }
@@ -81,7 +83,10 @@ public class EventUiInstrumentedTest {
                 null,
                 "CENTRO",
                 "/contenido/actividades/Musica",
-                true
+                true,
+                40.4168,
+                -3.7038,
+                "Centro Cultural"
         );
     }
 }

@@ -11,30 +11,37 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.ErrorCodes;
-import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
+import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.marinainsaurralde.plango.data.MadridApiClient;
 import com.marinainsaurralde.plango.model.Evento;
-import com.marinainsaurralde.plango.ui.EventoAdapter;
 
 import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int INITIAL_EVENT_LIMIT = 20;
+    private static final int INITIAL_EVENT_LIMIT = 50;
+    private static final LatLng MADRID_CENTER = new LatLng(40.4168, -3.7038);
+    private static final float MADRID_ZOOM = 11.5f;
+
     private final MadridApiClient madridApiClient = new MadridApiClient();
-    private EventoAdapter eventoAdapter;
+    private List<Evento> mapEvents = Collections.emptyList();
+    private GoogleMap googleMap;
     private boolean eventsRequested;
 
     private final ActivityResultLauncher<Intent> signInLauncher =
@@ -48,19 +55,23 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (view, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
         findViewById(R.id.buttonSignOut).setOnClickListener(view -> signOut());
-        findViewById(R.id.buttonRetryEvents).setOnClickListener(view -> loadEvents());
+        findViewById(R.id.buttonViewList).setOnClickListener(
+                view -> startActivity(new Intent(this, EventosActivity.class))
+        );
+        findViewById(R.id.buttonRetryMapEvents).setOnClickListener(view -> loadMapEvents());
 
-        RecyclerView eventsList = findViewById(R.id.recyclerEvents);
-        eventsList.setLayoutManager(new LinearLayoutManager(this));
-        eventoAdapter = new EventoAdapter(this::openEventDetail);
-        eventsList.setAdapter(eventoAdapter);
+        SupportMapFragment mapFragment = (SupportMapFragment)
+                getSupportFragmentManager().findFragmentById(R.id.mapFragment);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this::onMapReady);
+        }
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -135,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.buttonSignOut).setVisibility(View.VISIBLE);
         findViewById(R.id.authenticatedContent).setVisibility(View.VISIBLE);
         if (!eventsRequested) {
-            loadEvents();
+            loadMapEvents();
         }
     }
 
@@ -156,17 +167,30 @@ public class MainActivity extends AppCompatActivity {
         snackbar.show();
     }
 
-    private void loadEvents() {
+    private void onMapReady(GoogleMap map) {
+        googleMap = map;
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(MADRID_CENTER, MADRID_ZOOM));
+        googleMap.setOnInfoWindowClickListener(marker -> {
+            Object tag = marker.getTag();
+            if (tag instanceof Evento) {
+                openEventDetail((Evento) tag);
+            }
+        });
+        renderEventMarkers();
+    }
+
+    private void loadMapEvents() {
         eventsRequested = true;
-        showEventLoading();
+        showMapLoading();
         madridApiClient.obtenerEventos(INITIAL_EVENT_LIMIT, 0, new MadridApiClient.Callback() {
             @Override
             public void onSuccess(List<Evento> eventos) {
                 if (isFinishing() || isDestroyed()) {
                     return;
                 }
-                eventoAdapter.setEventos(eventos);
-                showEventResults(eventos.isEmpty());
+                mapEvents = eventos;
+                renderEventMarkers();
+                showMapLoaded();
             }
 
             @Override
@@ -174,33 +198,48 @@ public class MainActivity extends AppCompatActivity {
                 if (isFinishing() || isDestroyed()) {
                     return;
                 }
-                showEventError();
+                showMapError();
             }
         });
     }
 
-    private void showEventLoading() {
-        findViewById(R.id.progressEvents).setVisibility(View.VISIBLE);
-        findViewById(R.id.recyclerEvents).setVisibility(View.GONE);
-        findViewById(R.id.layoutEventState).setVisibility(View.GONE);
-    }
-
-    private void showEventResults(boolean empty) {
-        findViewById(R.id.progressEvents).setVisibility(View.GONE);
-        findViewById(R.id.recyclerEvents).setVisibility(empty ? View.GONE : View.VISIBLE);
-        findViewById(R.id.layoutEventState).setVisibility(empty ? View.VISIBLE : View.GONE);
-        if (empty) {
-            ((TextView) findViewById(R.id.textEventState)).setText(R.string.no_events);
-            findViewById(R.id.buttonRetryEvents).setVisibility(View.GONE);
+    private void renderEventMarkers() {
+        if (googleMap == null) {
+            return;
+        }
+        googleMap.clear();
+        for (Evento evento : mapEvents) {
+            if (!evento.hasValidCoordinates()) {
+                continue;
+            }
+            MarkerOptions options = new MarkerOptions()
+                    .position(new LatLng(evento.getLatitud(), evento.getLongitud()))
+                    .title(evento.getTitulo() == null
+                            ? getString(R.string.event_without_title)
+                            : evento.getTitulo());
+            if (evento.getNombreInstalacion() != null) {
+                options.snippet(evento.getNombreInstalacion());
+            }
+            Marker marker = googleMap.addMarker(options);
+            if (marker != null) {
+                marker.setTag(evento);
+            }
         }
     }
 
-    private void showEventError() {
-        findViewById(R.id.progressEvents).setVisibility(View.GONE);
-        findViewById(R.id.recyclerEvents).setVisibility(View.GONE);
-        findViewById(R.id.layoutEventState).setVisibility(View.VISIBLE);
-        ((TextView) findViewById(R.id.textEventState)).setText(R.string.events_connection_error);
-        findViewById(R.id.buttonRetryEvents).setVisibility(View.VISIBLE);
+    private void showMapLoading() {
+        findViewById(R.id.progressMapEvents).setVisibility(View.VISIBLE);
+        findViewById(R.id.layoutMapState).setVisibility(View.GONE);
+    }
+
+    private void showMapLoaded() {
+        findViewById(R.id.progressMapEvents).setVisibility(View.GONE);
+        findViewById(R.id.layoutMapState).setVisibility(View.GONE);
+    }
+
+    private void showMapError() {
+        findViewById(R.id.progressMapEvents).setVisibility(View.GONE);
+        findViewById(R.id.layoutMapState).setVisibility(View.VISIBLE);
     }
 
     private void openEventDetail(Evento evento) {
