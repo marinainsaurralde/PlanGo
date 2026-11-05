@@ -33,11 +33,18 @@ public final class FiltroEventos {
         private final Periodo periodo;
         private final boolean soloGratuitos;
         private final String distrito;
+        private final CategoriaCultural categoria;
 
         public Criterios(Periodo periodo, boolean soloGratuitos, String distrito) {
+            this(periodo, soloGratuitos, distrito, null);
+        }
+
+        public Criterios(Periodo periodo, boolean soloGratuitos, String distrito,
+                         CategoriaCultural categoria) {
             this.periodo = periodo == null ? Periodo.PROXIMOS_7_DIAS : periodo;
             this.soloGratuitos = soloGratuitos;
             this.distrito = normalize(distrito);
+            this.categoria = categoria;
         }
 
         public static Criterios porDefecto() {
@@ -55,6 +62,8 @@ public final class FiltroEventos {
         public String getDistrito() {
             return distrito;
         }
+
+        public CategoriaCultural getCategoria() { return categoria; }
     }
 
     private FiltroEventos() {
@@ -83,6 +92,10 @@ public final class FiltroEventos {
                     && !safeCriteria.getDistrito().equals(normalize(evento.getDistrito()))) {
                 continue;
             }
+            if (safeCriteria.getCategoria() != null
+                    && CategoriaCultural.clasificar(evento) != safeCriteria.getCategoria()) {
+                continue;
+            }
             if (range != null && !hasOccurrenceInRange(evento, range.start, range.end)) {
                 continue;
             }
@@ -102,6 +115,14 @@ public final class FiltroEventos {
             }
         }
         return new ArrayList<>(districts);
+    }
+
+    public static List<CategoriaCultural> categoriasDisponibles(List<Evento> eventos) {
+        Set<CategoriaCultural> categories = EnumSet.noneOf(CategoriaCultural.class);
+        if (eventos != null) for (Evento evento : eventos) {
+            categories.add(CategoriaCultural.clasificar(evento));
+        }
+        return new ArrayList<>(categories);
     }
 
     private static DateRange dateRange(Periodo periodo, LocalDate today) {

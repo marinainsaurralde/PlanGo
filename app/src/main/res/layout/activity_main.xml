@@ -225,6 +225,20 @@
                 android:textColor="@color/plango_text"
                 android:textSize="13sp" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonCategory"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/all_categories"
+                android:textColor="@color/plango_primary"
+                android:textSize="12sp"
+                app:strokeColor="@color/plango_primary" />
+
         </LinearLayout>
 
         <TextView

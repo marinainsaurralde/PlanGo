@@ -31,7 +31,8 @@ public final class FiltrosViewBinder {
             store.setCriterios(new FiltroEventos.Criterios(
                     periodFor(checkedId),
                     current.isSoloGratuitos(),
-                    current.getDistrito()
+                    current.getDistrito(),
+                    current.getCategoria()
             ));
             onFiltersChanged.run();
         });
@@ -43,7 +44,8 @@ public final class FiltrosViewBinder {
             store.setCriterios(new FiltroEventos.Criterios(
                     current.getPeriodo(),
                     checked,
-                    current.getDistrito()
+                    current.getDistrito(),
+                    current.getCategoria()
             ));
             onFiltersChanged.run();
         });
