@@ -1,14 +1,13 @@
 package com.marinainsaurralde.plango.model;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
 
-public class Evento implements Serializable {
+public class Evento extends Plan {
 
     private static final long serialVersionUID = 1L;
     private static final DateTimeFormatter API_DATE_FORMAT =
@@ -16,22 +15,15 @@ public class Evento implements Serializable {
     private static final DateTimeFormatter DISPLAY_DATE_FORMAT =
             DateTimeFormatter.ofPattern("d MMM yyyy", new Locale("es", "ES"));
 
-    private final String identificador;
-    private final String titulo;
     private final String fechaInicio;
     private final String fechaFin;
-    private final String distrito;
     private final String tipo;
     private final boolean gratuito;
     private final boolean gratuidadInformada;
-    private final Double latitud;
-    private final Double longitud;
-    private final String nombreInstalacion;
     private final String diasSemana;
     private final String diasExcluidos;
     private final String hora;
     private final String precio;
-    private final String urlOficial;
 
     public Evento(
             String identificador,
@@ -92,139 +84,94 @@ public class Evento implements Serializable {
             String precio,
             String urlOficial
     ) {
-        this.identificador = identificador;
-        this.titulo = titulo;
-        this.fechaInicio = fechaInicio;
-        this.fechaFin = fechaFin;
-        this.distrito = distrito;
-        this.tipo = tipo;
+        this(defaultPlan(identificador, titulo, distrito, tipo, gratuito, gratuidadInformada,
+                        latitud, longitud, nombreInstalacion, urlOficial),
+                fechaInicio, fechaFin, tipo, gratuito, gratuidadInformada,
+                diasSemana, diasExcluidos, hora, precio);
+    }
+
+    public Evento(
+            Plan.Builder plan,
+            String fechaInicio,
+            String fechaFin,
+            String tipo,
+            boolean gratuito,
+            boolean gratuidadInformada,
+            String diasSemana,
+            String diasExcluidos,
+            String hora,
+            String precio
+    ) {
+        super(plan);
+        this.fechaInicio = normalize(fechaInicio);
+        this.fechaFin = normalize(fechaFin);
+        this.tipo = normalize(tipo);
         this.gratuito = gratuito;
         this.gratuidadInformada = gratuidadInformada;
-        this.latitud = latitud;
-        this.longitud = longitud;
-        this.nombreInstalacion = nombreInstalacion;
-        this.diasSemana = diasSemana;
-        this.diasExcluidos = diasExcluidos;
-        this.hora = hora;
-        this.precio = precio;
-        this.urlOficial = urlOficial;
+        this.diasSemana = normalize(diasSemana);
+        this.diasExcluidos = normalize(diasExcluidos);
+        this.hora = normalize(hora);
+        this.precio = normalize(precio);
     }
 
-    public String getIdentificador() {
-        return identificador;
+    private static Plan.Builder defaultPlan(
+            String identificador,
+            String titulo,
+            String distrito,
+            String tipo,
+            boolean gratuito,
+            boolean gratuidadInformada,
+            Double latitud,
+            Double longitud,
+            String nombreInstalacion,
+            String urlOficial
+    ) {
+        return Plan.builder(PlanIdentity.EVENTO_MADRID, identificador, titulo)
+                .planType(PlanType.CULTURA)
+                .temporalKind(TemporalKind.EVENTO)
+                .categoryKey(tipo)
+                .priceStatus(priceStatus(gratuito, gratuidadInformada))
+                .distrito(distrito)
+                .coordinates(latitud, longitud)
+                .nombreInstalacion(nombreInstalacion)
+                .urlOficial(urlOficial);
     }
 
-    public String getTitulo() {
-        return titulo;
+    private static PriceStatus priceStatus(boolean gratuito, boolean informed) {
+        if (!informed) return PriceStatus.DESCONOCIDO;
+        return gratuito ? PriceStatus.GRATIS : PriceStatus.DE_PAGO;
     }
 
-    public String getFechaInicio() {
-        return fechaInicio;
-    }
+    public String getFechaInicio() { return fechaInicio; }
+    public String getFechaFin() { return fechaFin; }
+    public String getTipo() { return tipo; }
+    public boolean isGratuito() { return gratuito; }
+    public boolean isGratuidadInformada() { return gratuidadInformada; }
+    public String getDiasSemana() { return diasSemana; }
+    public String getDiasExcluidos() { return diasExcluidos; }
+    public String getHora() { return hora; }
+    public String getPrecio() { return precio; }
 
-    public String getFechaFin() {
-        return fechaFin;
-    }
-
-    public String getDistrito() {
-        return distrito;
-    }
-
-    public String getTipo() {
-        return tipo;
-    }
-
-    public boolean isGratuito() {
-        return gratuito;
-    }
-
-    public boolean isGratuidadInformada() {
-        return gratuidadInformada;
-    }
-
-    public Double getLatitud() {
-        return latitud;
-    }
-
-    public Double getLongitud() {
-        return longitud;
-    }
-
-    public String getNombreInstalacion() {
-        return nombreInstalacion;
-    }
-
-    public String getDiasSemana() {
-        return diasSemana;
-    }
-
-    public String getDiasExcluidos() {
-        return diasExcluidos;
-    }
-
-    public String getHora() {
-        return hora;
-    }
-
-    public String getPrecio() {
-        return precio;
-    }
-
-    public String getUrlOficial() {
-        return urlOficial;
-    }
-
-    public LocalDateTime getFechaInicioParsed() {
-        return parseDate(fechaInicio);
-    }
-
-    public LocalDateTime getFechaFinParsed() {
-        return parseDate(fechaFin);
-    }
-
-    public boolean hasValidCoordinates() {
-        return latitud != null
-                && longitud != null
-                && latitud >= -90
-                && latitud <= 90
-                && longitud >= -180
-                && longitud <= 180;
-    }
-
-    public String getFechaInicioFormateada() {
-        return formatDate(fechaInicio);
-    }
-
-    public String getFechaFinFormateada() {
-        return formatDate(fechaFin);
-    }
+    public LocalDateTime getFechaInicioParsed() { return parseDate(fechaInicio); }
+    public LocalDateTime getFechaFinParsed() { return parseDate(fechaFin); }
+    public String getFechaInicioFormateada() { return formatDate(fechaInicio); }
+    public String getFechaFinFormateada() { return formatDate(fechaFin); }
 
     public String getPeriodoFormateado() {
         LocalDate start = toLocalDate(getFechaInicioParsed());
         LocalDate end = toLocalDate(getFechaFinParsed());
-        if (start == null && end == null) {
-            return null;
-        }
-        if (start == null) {
-            return formatLocalDate(end);
-        }
-        if (end == null || start.equals(end)) {
-            return formatLocalDate(start);
-        }
+        if (start == null && end == null) return null;
+        if (start == null) return formatLocalDate(end);
+        if (end == null || start.equals(end)) return formatLocalDate(start);
         return formatLocalDate(start) + " – " + formatLocalDate(end);
     }
 
-    public boolean isEnCurso(ZoneId zoneId) {
-        return isEnCurso(LocalDate.now(zoneId));
-    }
+    public boolean isEnCurso(ZoneId zoneId) { return isEnCurso(LocalDate.now(zoneId)); }
 
     public boolean isEnCurso(LocalDate today) {
         LocalDate start = toLocalDate(getFechaInicioParsed());
         LocalDate end = toLocalDate(getFechaFinParsed());
-        if (start == null || end == null) {
-            return false;
-        }
-        return start.isBefore(today) && !end.isBefore(today);
+        return start != null && end != null && start.isBefore(today) && !end.isBefore(today);
     }
 
     public boolean isFinalizado(ZoneId zoneId) {
@@ -233,9 +180,7 @@ public class Evento implements Serializable {
     }
 
     private static String formatDate(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return null;
-        }
+        if (value == null) return null;
         try {
             return LocalDateTime.parse(value, API_DATE_FORMAT).format(DISPLAY_DATE_FORMAT);
         } catch (DateTimeParseException ignored) {
@@ -244,9 +189,7 @@ public class Evento implements Serializable {
     }
 
     private static LocalDateTime parseDate(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return null;
-        }
+        if (value == null) return null;
         try {
             return LocalDateTime.parse(value, API_DATE_FORMAT);
         } catch (DateTimeParseException ignored) {

@@ -57,15 +57,15 @@ public class DetalleEventoActivity extends AppCompatActivity {
 
     private void updateFavoriteButton() {
         if (evento == null) return;
-        boolean favorite = favoritosRepository.isFavorito(evento.getIdentificador());
-        boolean pending = favoritosRepository.isPending(evento.getIdentificador());
+        boolean favorite = favoritosRepository.isFavorito(evento.getFavoriteDocumentId());
+        boolean pending = favoritosRepository.isPending(evento.getFavoriteDocumentId());
         MaterialButton button = findViewById(R.id.buttonDetailFavorite);
         button.setIconResource(favorite
                 ? R.drawable.ic_favorite_filled_24
                 : R.drawable.ic_favorite_border_24);
         button.setContentDescription(getString(
                 favorite ? R.string.remove_from_plans : R.string.add_to_plans));
-        button.setEnabled(!pending && evento.getIdentificador() != null);
+        button.setEnabled(!pending && evento.getFavoriteDocumentId() != null);
     }
 
     private void showFavoriteError() {

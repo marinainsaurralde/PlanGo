@@ -125,9 +125,10 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
                     && evento.isFinalizado(FiltroEventos.MADRID_ZONE)
                     ? View.VISIBLE
                     : View.GONE);
-            boolean hasId = evento.getIdentificador() != null;
-            boolean favorite = hasId && favoriteIds.contains(evento.getIdentificador());
-            boolean pending = hasId && pendingIds.contains(evento.getIdentificador());
+            String favoriteId = evento.getFavoriteDocumentId();
+            boolean hasId = favoriteId != null;
+            boolean favorite = hasId && favoriteIds.contains(favoriteId);
+            boolean pending = hasId && pendingIds.contains(favoriteId);
             favoriteButton.setVisibility(favoriteListener == null ? View.GONE : View.VISIBLE);
             favoriteButton.setIconResource(favorite
                     ? R.drawable.ic_favorite_filled_24

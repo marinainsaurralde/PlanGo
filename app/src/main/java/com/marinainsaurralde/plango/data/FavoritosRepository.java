@@ -85,7 +85,7 @@ public final class FavoritosRepository {
 
     public void toggle(Evento evento, OperationCallback callback) {
         FirebaseUser user = auth.getCurrentUser();
-        String eventId = evento == null ? null : evento.getIdentificador();
+        String eventId = evento == null ? null : evento.getFavoriteDocumentId();
         if (user == null || eventId == null || eventId.trim().isEmpty()) {
             callback.onError(new IllegalStateException("No hay una sesión o evento válido"));
             return;

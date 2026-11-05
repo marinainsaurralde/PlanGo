@@ -6,6 +6,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.model.Plan;
+import com.marinainsaurralde.plango.model.PlanIdentity;
+import com.marinainsaurralde.plango.model.PlanType;
+import com.marinainsaurralde.plango.model.PriceStatus;
+import com.marinainsaurralde.plango.model.TemporalKind;
 
 import org.junit.Test;
 
@@ -40,6 +45,9 @@ public class FavoritoMapperTest {
         assertEquals(original.getLatitud(), restored.getLatitud());
         assertEquals(original.getLongitud(), restored.getLongitud());
         assertEquals(original.getUrlOficial(), restored.getUrlOficial());
+        assertEquals(PlanIdentity.EVENTO_MADRID, restored.getSource());
+        assertEquals(PriceStatus.GRATIS, restored.getPriceStatus());
+        assertTrue(restored.getPlanTypes().contains(PlanType.CULTURA));
         assertFalse(document.containsKey("guardadoEn"));
     }
 
@@ -54,6 +62,40 @@ public class FavoritoMapperTest {
         assertNull(restored.getTitulo());
         assertNull(restored.getFechaInicio());
         assertFalse(restored.isGratuito());
+        assertFalse(restored.isGratuidadInformada());
+        assertEquals(PriceStatus.DESCONOCIDO, restored.getPriceStatus());
+        assertEquals("document-id", restored.getFavoriteDocumentId());
+        assertEquals(TemporalKind.EVENTO, restored.getTemporalKind());
+        assertTrue(restored.getPlanTypes().contains(PlanType.CULTURA));
+    }
+
+    @Test
+    public void newMetadataSurvivesFavoriteRoundTrip() {
+        Plan.Builder metadata = Plan.builder("evento-madrid", "456", "Ruta deportiva")
+                .planType(PlanType.DEPORTE)
+                .planType(PlanType.NATURALEZA)
+                .temporalKind(TemporalKind.EVENTO)
+                .categoryKey("ciclismo")
+                .categoryKey("aire-libre")
+                .description("Ruta guiada")
+                .address("Casa de Campo")
+                .schedule("Domingos")
+                .priceStatus(PriceStatus.DE_PAGO)
+                .lastSourceUpdate("2026-11-05")
+                .distrito("MONCLOA-ARAVACA");
+        Evento original = new Evento(metadata, "2026-11-08 09:00:00.0",
+                "2026-11-08 12:00:00.0", "Ciclismo", false, true,
+                null, null, "09:00", "10 €");
+
+        Evento restored = FavoritoMapper.fromMap("456", FavoritoMapper.toMap(original));
+
+        assertEquals(original.getPlanTypes(), restored.getPlanTypes());
+        assertEquals(original.getCategoryKeys(), restored.getCategoryKeys());
+        assertEquals(original.getDescription(), restored.getDescription());
+        assertEquals(original.getAddress(), restored.getAddress());
+        assertEquals(original.getSchedule(), restored.getSchedule());
+        assertEquals(PriceStatus.DE_PAGO, restored.getPriceStatus());
+        assertEquals("2026-11-05", restored.getLastSourceUpdate());
     }
 
     @Test
