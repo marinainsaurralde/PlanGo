@@ -1,6 +1,6 @@
 package com.marinainsaurralde.plango.data;
 
-import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.model.Plan;
 import com.marinainsaurralde.plango.model.FiltroEventos;
 
 import java.util.ArrayList;
@@ -11,7 +11,7 @@ public final class EventosStore {
 
     private static final EventosStore INSTANCE = new EventosStore();
 
-    private List<Evento> eventos = Collections.emptyList();
+    private List<Plan> eventos = Collections.emptyList();
     private FiltroEventos.Criterios criterios = FiltroEventos.Criterios.porDefecto();
     private boolean loaded;
     private long lastUpdatedMillis;
@@ -23,13 +23,13 @@ public final class EventosStore {
         return INSTANCE;
     }
 
-    public synchronized void setEventos(List<Evento> nuevosEventos) {
+    public synchronized void setEventos(List<Plan> nuevosEventos) {
         eventos = Collections.unmodifiableList(new ArrayList<>(nuevosEventos));
         loaded = true;
         lastUpdatedMillis = System.currentTimeMillis();
     }
 
-    public synchronized List<Evento> getEventos() {
+    public synchronized List<Plan> getEventos() {
         return eventos;
     }
 

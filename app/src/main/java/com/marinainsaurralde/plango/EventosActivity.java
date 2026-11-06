@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.marinainsaurralde.plango.data.EventosStore;
 import com.marinainsaurralde.plango.data.FavoritosRepository;
-import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.model.Plan;
 import com.marinainsaurralde.plango.model.FiltroEventos;
 import com.marinainsaurralde.plango.ui.EventoAdapter;
 
@@ -60,7 +60,7 @@ public class EventosActivity extends AppCompatActivity {
         showEvents();
     }
 
-    private void toggleFavorite(Evento evento) {
+    private void toggleFavorite(Plan evento) {
         favoritosRepository.toggle(evento, error -> showFavoriteError());
     }
 
@@ -92,7 +92,7 @@ public class EventosActivity extends AppCompatActivity {
             showEventError();
             return;
         }
-        List<Evento> eventos = FiltroEventos.aplicar(
+        List<Plan> eventos = FiltroEventos.aplicar(
                 eventosStore.getEventos(),
                 eventosStore.getCriterios()
         );
@@ -131,7 +131,7 @@ public class EventosActivity extends AppCompatActivity {
         findViewById(R.id.buttonRetryEvents).setVisibility(View.VISIBLE);
     }
 
-    private void openEventDetail(Evento evento) {
+    private void openEventDetail(Plan evento) {
         Intent intent = new Intent(this, DetalleEventoActivity.class);
         intent.putExtra(DetalleEventoActivity.EXTRA_EVENTO, evento);
         startActivity(intent);

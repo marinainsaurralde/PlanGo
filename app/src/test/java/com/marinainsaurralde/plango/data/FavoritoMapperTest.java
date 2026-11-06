@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.model.Lugar;
+import com.marinainsaurralde.plango.model.Plan;
 import com.marinainsaurralde.plango.model.Plan;
 import com.marinainsaurralde.plango.model.PlanIdentity;
 import com.marinainsaurralde.plango.model.PlanType;
@@ -30,7 +32,7 @@ public class FavoritoMapperTest {
         );
 
         Map<String, Object> document = FavoritoMapper.toMap(original);
-        Evento restored = FavoritoMapper.fromMap("fallback", document);
+        Evento restored = (Evento) FavoritoMapper.fromMap("fallback", document);
 
         assertEquals("123", restored.getIdentificador());
         assertEquals(original.getTitulo(), restored.getTitulo());
@@ -56,7 +58,7 @@ public class FavoritoMapperTest {
         Map<String, Object> document = new HashMap<>();
         document.put("gratuito", false);
 
-        Evento restored = FavoritoMapper.fromMap("document-id", document);
+        Evento restored = (Evento) FavoritoMapper.fromMap("document-id", document);
 
         assertEquals("document-id", restored.getIdentificador());
         assertNull(restored.getTitulo());
@@ -87,7 +89,7 @@ public class FavoritoMapperTest {
                 "2026-11-08 12:00:00.0", "Ciclismo", false, true,
                 null, null, "09:00", "10 €");
 
-        Evento restored = FavoritoMapper.fromMap("456", FavoritoMapper.toMap(original));
+        Evento restored = (Evento) FavoritoMapper.fromMap("456", FavoritoMapper.toMap(original));
 
         assertEquals(original.getPlanTypes(), restored.getPlanTypes());
         assertEquals(original.getCategoryKeys(), restored.getCategoryKeys());
@@ -111,5 +113,30 @@ public class FavoritoMapperTest {
 
         assertTrue(finished.isFinalizado(ZoneId.of("Europe/Madrid")));
         assertFalse(invalid.isFinalizado(ZoneId.of("Europe/Madrid")));
+    }
+
+    @Test
+    public void parkRoundTripUsesCompositeIdentityAndPreservesPermanentMetadata() {
+        Plan park = new Lugar(Plan.builder(PlanIdentity.PARQUE_MADRID, "123", "Parque")
+                .planType(PlanType.NATURALEZA)
+                .temporalKind(TemporalKind.LUGAR_PERMANENTE)
+                .categoryKey("naturaleza:parques-jardines")
+                .description("Zona verde")
+                .address("CALLE VERDE 1")
+                .schedule("De 8 a 22 h")
+                .priceStatus(PriceStatus.DESCONOCIDO)
+                .distrito("RETIRO")
+                .coordinates(40.4, -3.7));
+
+        Plan restored = FavoritoMapper.fromMap(park.getFavoriteDocumentId(),
+                FavoritoMapper.toMap(park));
+
+        assertTrue(restored instanceof Lugar);
+        assertEquals("parque-madrid:123", restored.getFavoriteDocumentId());
+        assertEquals(TemporalKind.LUGAR_PERMANENTE, restored.getTemporalKind());
+        assertEquals(PriceStatus.DESCONOCIDO, restored.getPriceStatus());
+        assertEquals(park.getDescription(), restored.getDescription());
+        assertEquals(park.getAddress(), restored.getAddress());
+        assertEquals(park.getSchedule(), restored.getSchedule());
     }
 }

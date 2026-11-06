@@ -1,6 +1,7 @@
 package com.marinainsaurralde.plango.data;
 
 import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.model.Lugar;
 import com.marinainsaurralde.plango.model.Plan;
 import com.marinainsaurralde.plango.model.PlanIdentity;
 import com.marinainsaurralde.plango.model.PlanType;
@@ -20,23 +21,24 @@ public final class FavoritoMapper {
     private FavoritoMapper() {
     }
 
-    public static Map<String, Object> toMap(Evento evento) {
+    public static Map<String, Object> toMap(Plan evento) {
         Map<String, Object> values = new HashMap<>();
         put(values, "idEvento", evento.getIdentificador());
         put(values, "titulo", evento.getTitulo());
-        put(values, "fechaInicio", evento.getFechaInicio());
-        put(values, "fechaFin", evento.getFechaFin());
-        put(values, "hora", evento.getHora());
+        Evento temporalEvent = evento instanceof Evento ? (Evento) evento : null;
+        put(values, "fechaInicio", temporalEvent == null ? null : temporalEvent.getFechaInicio());
+        put(values, "fechaFin", temporalEvent == null ? null : temporalEvent.getFechaFin());
+        put(values, "hora", temporalEvent == null ? null : temporalEvent.getHora());
         put(values, "instalacion", evento.getNombreInstalacion());
         put(values, "distrito", evento.getDistrito());
-        put(values, "precio", evento.getPrecio());
-        values.put("gratuito", evento.isGratuito());
-        put(values, "tipo", evento.getTipo());
+        put(values, "precio", temporalEvent == null ? null : temporalEvent.getPrecio());
+        values.put("gratuito", evento.getPriceStatus() == PriceStatus.GRATIS);
+        put(values, "tipo", temporalEvent == null ? null : temporalEvent.getTipo());
         put(values, "latitud", evento.getLatitud());
         put(values, "longitud", evento.getLongitud());
         put(values, "urlOficial", evento.getUrlOficial());
-        put(values, "diasSemana", evento.getDiasSemana());
-        put(values, "diasExcluidos", evento.getDiasExcluidos());
+        put(values, "diasSemana", temporalEvent == null ? null : temporalEvent.getDiasSemana());
+        put(values, "diasExcluidos", temporalEvent == null ? null : temporalEvent.getDiasExcluidos());
         put(values, "source", evento.getSource());
         put(values, "sourceId", evento.getSourceId());
         values.put("planTypes", enumNames(evento.getPlanTypes()));
@@ -47,11 +49,11 @@ public final class FavoritoMapper {
         put(values, "schedule", evento.getSchedule());
         put(values, "priceStatus", evento.getPriceStatus().name());
         put(values, "lastSourceUpdate", evento.getLastSourceUpdate());
-        values.put("gratuidadInformada", evento.isGratuidadInformada());
+        values.put("gratuidadInformada", evento.getPriceStatus() != PriceStatus.DESCONOCIDO);
         return values;
     }
 
-    public static Evento fromMap(String documentId, Map<String, Object> values) {
+    public static Plan fromMap(String documentId, Map<String, Object> values) {
         String id = string(values.get("idEvento"));
         String sourceId = first(string(values.get("sourceId")), id, documentId);
         String source = first(string(values.get("source")), PlanIdentity.EVENTO_MADRID);
@@ -69,6 +71,10 @@ public final class FavoritoMapper {
                 .coordinates(number(values.get("latitud")), number(values.get("longitud")))
                 .nombreInstalacion(string(values.get("instalacion")))
                 .urlOficial(string(values.get("urlOficial")));
+        if (planTemporalKind(values) == TemporalKind.LUGAR_PERMANENTE
+                || PlanIdentity.PARQUE_MADRID.equals(source)) {
+            return new Lugar(plan);
+        }
         return new Evento(
                 plan,
                 string(values.get("fechaInicio")),
@@ -81,6 +87,10 @@ public final class FavoritoMapper {
                 string(values.get("hora")),
                 string(values.get("precio"))
         );
+    }
+
+    private static TemporalKind planTemporalKind(Map<String, Object> values) {
+        return enumValue(TemporalKind.class, values.get("temporalKind"), TemporalKind.EVENTO);
     }
 
     private static PriceStatus priceStatus(Map<String, Object> values) {

@@ -3,6 +3,7 @@ package com.marinainsaurralde.plango.model;
 public final class PlanIdentity {
 
     public static final String EVENTO_MADRID = "evento-madrid";
+    public static final String PARQUE_MADRID = "parque-madrid";
 
     private PlanIdentity() {
     }

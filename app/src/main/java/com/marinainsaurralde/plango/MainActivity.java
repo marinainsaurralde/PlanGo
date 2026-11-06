@@ -36,6 +36,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.marinainsaurralde.plango.data.MadridApiClient;
 import com.marinainsaurralde.plango.data.DeportesApiClient;
+import com.marinainsaurralde.plango.data.ParquesApiClient;
 import com.marinainsaurralde.plango.data.EventosMultifuenteLoader;
 import com.marinainsaurralde.plango.data.EventosStore;
 import com.marinainsaurralde.plango.data.ConsultasRepository;
@@ -43,6 +44,9 @@ import com.marinainsaurralde.plango.data.ConsultaEstadisticas;
 import com.marinainsaurralde.plango.data.AgrupadorEventos;
 import com.marinainsaurralde.plango.data.FavoritosRepository;
 import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.model.Plan;
+import com.marinainsaurralde.plango.model.PlanType;
+import com.marinainsaurralde.plango.model.TemporalKind;
 import com.marinainsaurralde.plango.model.ConsultaHistorial;
 import com.marinainsaurralde.plango.model.GrupoUbicacion;
 import com.marinainsaurralde.plango.model.CategoriaCultural;
@@ -67,9 +71,9 @@ public class MainActivity extends AppCompatActivity {
     private static final float MADRID_ZOOM = 11.5f;
 
     private final EventosMultifuenteLoader eventosLoader = new EventosMultifuenteLoader(
-            new MadridApiClient(), new DeportesApiClient());
+            new MadridApiClient(), new DeportesApiClient(), new ParquesApiClient());
     private final EventosStore eventosStore = EventosStore.getInstance();
-    private List<Evento> mapEvents = Collections.emptyList();
+    private List<Plan> mapEvents = Collections.emptyList();
     private GoogleMap googleMap;
     private boolean eventsRequested;
     private FiltrosViewBinder filtrosViewBinder;
@@ -246,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
                 if(eventosStore.isLoaded()){findViewById(R.id.progressMapEvents).setVisibility(View.GONE);Snackbar.make(findViewById(R.id.main),R.string.refresh_error,Snackbar.LENGTH_LONG).show();}else showMapError();
                 return;
             }
-            List<Evento> eventos = result.getEventos();
+            List<Plan> eventos = result.getPlanes();
             eventosStore.setEventos(eventos);
             if (result.isComplete()) {
                 ConsultaHistorial stats=ConsultaEstadisticas.calcular(eventos,manual?"manual":"automatica");
@@ -429,14 +433,20 @@ public class MainActivity extends AppCompatActivity {
         }
         googleMap.clear();
         for (GrupoUbicacion grupo : AgrupadorEventos.agrupar(mapEvents)) {
-            Evento evento=grupo.getFirst();
+            Plan evento=grupo.getFirst();
             MarkerOptions options = new MarkerOptions()
                     .position(new LatLng(grupo.getLatitud(), grupo.getLongitud()));
             if(grupo.size()>1){options.title(getString(R.string.events_marker_count,grupo.size())).icon(markerIconFactory.group(grupo.size()));}
             else {
                 options.title(evento.getTitulo()==null?getString(R.string.event_without_title):evento.getTitulo())
-                        .icon(markerIconFactory.single(CategoriaCultural.clasificar(evento)));
-                List<String> details=new ArrayList<>();if(evento.getNombreInstalacion()!=null)details.add(evento.getNombreInstalacion());if(evento.getPeriodoFormateado()!=null)details.add(evento.getPeriodoFormateado());if(evento.isEnCurso(FiltroEventos.MADRID_ZONE))details.add(getString(R.string.event_ongoing));if(!details.isEmpty())options.snippet(String.join("\n",details));
+                        .icon(evento.getPlanTypes().contains(PlanType.NATURALEZA)
+                                ? markerIconFactory.nature()
+                                : markerIconFactory.single(CategoriaCultural.clasificar((Evento) evento)));
+                List<String> details=new ArrayList<>();
+                if(evento.getNombreInstalacion()!=null)details.add(evento.getNombreInstalacion());
+                if(evento.getTemporalKind()==TemporalKind.LUGAR_PERMANENTE)details.add(getString(R.string.permanent_place));
+                if(evento instanceof Evento){Evento event=(Evento)evento;if(event.getPeriodoFormateado()!=null)details.add(event.getPeriodoFormateado());if(event.isEnCurso(FiltroEventos.MADRID_ZONE))details.add(getString(R.string.event_ongoing));}
+                if(!details.isEmpty())options.snippet(String.join("\n",details));
             }
             Marker marker = googleMap.addMarker(options);
             if (marker != null) marker.setTag(grupo);
@@ -467,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
                         Snackbar.LENGTH_LONG
                 ).show())
         );
-        adapter.setEventos(grupo.getEventos());
+        adapter.setEventos(grupo.getPlanes());
 
         FavoritosRepository.Listener favoritesListener = new FavoritosRepository.Listener() {
             @Override
@@ -513,7 +523,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.buttonRetryMapEvents).setVisibility(View.VISIBLE);
     }
 
-    private void openEventDetail(Evento evento) {
+    private void openEventDetail(Plan evento) {
         Intent intent = new Intent(this, DetalleEventoActivity.class);
         intent.putExtra(DetalleEventoActivity.EXTRA_EVENTO, evento);
         startActivity(intent);

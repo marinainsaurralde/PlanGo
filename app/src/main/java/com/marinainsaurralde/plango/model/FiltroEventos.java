@@ -69,12 +69,12 @@ public final class FiltroEventos {
     private FiltroEventos() {
     }
 
-    public static List<Evento> aplicar(List<Evento> eventos, Criterios criterios) {
+    public static <T extends Plan> List<T> aplicar(List<T> eventos, Criterios criterios) {
         return aplicar(eventos, criterios, LocalDate.now(MADRID_ZONE));
     }
 
-    public static List<Evento> aplicar(
-            List<Evento> eventos,
+    public static <T extends Plan> List<T> aplicar(
+            List<T> eventos,
             Criterios criterios,
             LocalDate hoyMadrid
     ) {
@@ -83,31 +83,35 @@ public final class FiltroEventos {
         }
         Criterios safeCriteria = criterios == null ? Criterios.porDefecto() : criterios;
         DateRange range = dateRange(safeCriteria.getPeriodo(), hoyMadrid);
-        List<Evento> resultado = new ArrayList<>();
-        for (Evento evento : eventos) {
-            if (safeCriteria.isSoloGratuitos() && !evento.isGratuito()) {
+        List<T> resultado = new ArrayList<>();
+        for (T plan : eventos) {
+            if (safeCriteria.isSoloGratuitos() && plan.getPriceStatus() != PriceStatus.GRATIS) {
                 continue;
             }
             if (safeCriteria.getDistrito() != null
-                    && !safeCriteria.getDistrito().equals(normalize(evento.getDistrito()))) {
+                    && !safeCriteria.getDistrito().equals(normalize(plan.getDistrito()))) {
                 continue;
             }
             if (safeCriteria.getCategoria() != null
-                    && CategoriaCultural.clasificar(evento) != safeCriteria.getCategoria()) {
+                    && (!(plan instanceof Evento)
+                    || !plan.getPlanTypes().contains(PlanType.CULTURA)
+                    || CategoriaCultural.clasificar((Evento) plan) != safeCriteria.getCategoria())) {
                 continue;
             }
-            if (range != null && !hasOccurrenceInRange(evento, range.start, range.end)) {
+            if (range != null && plan.getTemporalKind() != TemporalKind.LUGAR_PERMANENTE
+                    && (!(plan instanceof Evento)
+                    || !hasOccurrenceInRange((Evento) plan, range.start, range.end))) {
                 continue;
             }
-            resultado.add(evento);
+            resultado.add(plan);
         }
         return resultado;
     }
 
-    public static List<String> distritosDisponibles(List<Evento> eventos) {
+    public static List<String> distritosDisponibles(List<? extends Plan> eventos) {
         Set<String> districts = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         if (eventos != null) {
-            for (Evento evento : eventos) {
+            for (Plan evento : eventos) {
                 String district = normalize(evento.getDistrito());
                 if (district != null) {
                     districts.add(district);
@@ -117,10 +121,12 @@ public final class FiltroEventos {
         return new ArrayList<>(districts);
     }
 
-    public static List<CategoriaCultural> categoriasDisponibles(List<Evento> eventos) {
+    public static List<CategoriaCultural> categoriasDisponibles(List<? extends Plan> eventos) {
         Set<CategoriaCultural> categories = EnumSet.noneOf(CategoriaCultural.class);
-        if (eventos != null) for (Evento evento : eventos) {
-            categories.add(CategoriaCultural.clasificar(evento));
+        if (eventos != null) for (Plan plan : eventos) {
+            if (plan instanceof Evento && plan.getPlanTypes().contains(PlanType.CULTURA)) {
+                categories.add(CategoriaCultural.clasificar((Evento) plan));
+            }
         }
         return new ArrayList<>(categories);
     }

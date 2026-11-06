@@ -14,9 +14,9 @@
     <string name="loading_events">Cargando eventos</string>
     <string name="no_events">No se han encontrado eventos.</string>
     <string name="events_connection_error">No hemos podido cargar los eventos. Comprueba tu conexión e inténtalo de nuevo.</string>
-    <string name="event_without_title">Evento sin título</string>
+    <string name="event_without_title">Plan sin título</string>
     <string name="free">Gratis</string>
-    <string name="event_detail">Detalle del evento</string>
+    <string name="event_detail">Detalle del plan</string>
     <string name="back">Volver</string>
     <string name="event_id">Identificador: %1$s</string>
     <string name="event_start">Fecha de inicio: %1$s</string>
@@ -32,6 +32,12 @@
     <string name="event_coordinates">Coordenadas: %1$.5f, %2$.5f</string>
     <string name="event_free_yes">Gratuito: Sí</string>
     <string name="event_free_no">Gratuito: No</string>
+    <string name="event_price_unknown">Precio: Sin información</string>
+    <string name="permanent_place">Lugar permanente</string>
+    <string name="plan_address">Dirección: %1$s</string>
+    <string name="plan_schedule">Horario: %1$s</string>
+    <string name="plan_description">Descripción: %1$s</string>
+    <string name="plan_type_nature">Naturaleza · Lugar permanente</string>
     <string name="view_list">Ver listado</string>
     <string name="back_to_map">Mapa</string>
     <string name="map_events_error">El mapa está disponible, pero no hemos podido cargar los eventos.</string>

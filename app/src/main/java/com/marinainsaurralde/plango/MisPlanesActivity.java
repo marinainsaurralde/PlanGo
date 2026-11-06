@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.marinainsaurralde.plango.data.FavoritosRepository;
-import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.model.Plan;
 import com.marinainsaurralde.plango.ui.EventoAdapter;
 
 import java.util.List;
@@ -81,7 +81,7 @@ public class MisPlanesActivity extends AppCompatActivity {
             stateText.setText(R.string.favorites_load_error);
             return;
         }
-        List<Evento> favorites = repository.getFavoritos();
+        List<Plan> favorites = repository.getFavoritos();
         adapter.setEventos(favorites);
         adapter.setFavoriteState(repository.getFavoriteIds(), repository.getPendingIds());
         boolean empty = favorites.isEmpty();
@@ -90,14 +90,14 @@ public class MisPlanesActivity extends AppCompatActivity {
         stateText.setText(R.string.no_favorites);
     }
 
-    private void removeFavorite(Evento evento) {
+    private void removeFavorite(Plan evento) {
         repository.toggle(evento, error -> Snackbar.make(
                 findViewById(R.id.myPlansRoot),
                 R.string.favorite_operation_error,
                 Snackbar.LENGTH_LONG).show());
     }
 
-    private void openDetail(Evento evento) {
+    private void openDetail(Plan evento) {
         Intent intent = new Intent(this, DetalleEventoActivity.class);
         intent.putExtra(DetalleEventoActivity.EXTRA_EVENTO, evento);
         startActivity(intent);

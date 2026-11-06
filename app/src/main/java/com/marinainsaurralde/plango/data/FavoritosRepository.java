@@ -7,7 +7,7 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.MetadataChanges;
-import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.model.Plan;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,7 +35,7 @@ public final class FavoritosRepository {
     private final FirebaseAuth auth = FirebaseAuth.getInstance();
     private final FirebaseFirestore firestore = FirebaseFirestore.getInstance();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
-    private final Map<String, Evento> favoritos = new LinkedHashMap<>();
+    private final Map<String, Plan> favoritos = new LinkedHashMap<>();
     private final Map<String, Boolean> pendingTargets = new HashMap<>();
     private ListenerRegistration snapshotRegistration;
     private String activeUid;
@@ -75,7 +75,7 @@ public final class FavoritosRepository {
         return Collections.unmodifiableSet(new HashSet<>(pendingTargets.keySet()));
     }
 
-    public synchronized List<Evento> getFavoritos() {
+    public synchronized List<Plan> getFavoritos() {
         return Collections.unmodifiableList(new ArrayList<>(favoritos.values()));
     }
 
@@ -83,7 +83,7 @@ public final class FavoritosRepository {
         return loaded;
     }
 
-    public void toggle(Evento evento, OperationCallback callback) {
+    public void toggle(Plan evento, OperationCallback callback) {
         FirebaseUser user = auth.getCurrentUser();
         String eventId = evento == null ? null : evento.getFavoriteDocumentId();
         if (user == null || eventId == null || eventId.trim().isEmpty()) {
@@ -148,7 +148,7 @@ public final class FavoritosRepository {
             if (snapshot != null && snapshot.getMetadata().hasPendingWrites()) {
                 return;
             }
-            Map<String, Evento> updated = new LinkedHashMap<>();
+            Map<String, Plan> updated = new LinkedHashMap<>();
             if (snapshot != null) {
                 snapshot.getDocuments().forEach(document -> updated.put(
                         document.getId(),

@@ -11,6 +11,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.marinainsaurralde.plango.R;
 import com.marinainsaurralde.plango.model.Evento;
 import com.marinainsaurralde.plango.model.FiltroEventos;
+import com.marinainsaurralde.plango.model.Plan;
+import com.marinainsaurralde.plango.model.PriceStatus;
+import com.marinainsaurralde.plango.model.TemporalKind;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
@@ -21,14 +24,14 @@ import java.util.Set;
 public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoViewHolder> {
 
     public interface OnEventoClickListener {
-        void onEventoClick(Evento evento);
+        void onEventoClick(Plan evento);
     }
 
     public interface OnFavoritoClickListener {
-        void onFavoritoClick(Evento evento);
+        void onFavoritoClick(Plan evento);
     }
 
-    private final List<Evento> eventos = new ArrayList<>();
+    private final List<Plan> eventos = new ArrayList<>();
     private final OnEventoClickListener listener;
     private final OnFavoritoClickListener favoriteListener;
     private Set<String> favoriteIds = Collections.emptySet();
@@ -55,7 +58,7 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
         notifyDataSetChanged();
     }
 
-    public void setEventos(List<Evento> nuevosEventos) {
+    public void setEventos(List<? extends Plan> nuevosEventos) {
         eventos.clear();
         if (nuevosEventos != null) {
             eventos.addAll(nuevosEventos);
@@ -87,6 +90,7 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
         private final TextView title;
         private final TextView date;
         private final TextView district;
+        private final TextView schedule;
         private final TextView freeBadge;
         private final TextView ongoingBadge;
         private final TextView finishedBadge;
@@ -97,6 +101,7 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
             title = itemView.findViewById(R.id.textEventTitle);
             date = itemView.findViewById(R.id.textEventDate);
             district = itemView.findViewById(R.id.textEventDistrict);
+            schedule = itemView.findViewById(R.id.textEventSchedule);
             freeBadge = itemView.findViewById(R.id.textFreeBadge);
             ongoingBadge = itemView.findViewById(R.id.textOngoingBadge);
             finishedBadge = itemView.findViewById(R.id.textFinishedBadge);
@@ -104,7 +109,7 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
         }
 
         void bind(
-                Evento evento,
+                Plan evento,
                 OnEventoClickListener listener,
                 OnFavoritoClickListener favoriteListener,
                 Set<String> favoriteIds,
@@ -115,14 +120,21 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
                     ? itemView.getContext().getString(R.string.event_without_title)
                     : evento.getTitulo());
 
-            setOptionalText(date, evento.getPeriodoFormateado());
-            setOptionalText(district, evento.getDistrito());
-            freeBadge.setVisibility(evento.isGratuito() ? View.VISIBLE : View.GONE);
-            ongoingBadge.setVisibility(evento.isEnCurso(FiltroEventos.MADRID_ZONE)
+            Evento temporalEvent = evento instanceof Evento ? (Evento) evento : null;
+            setOptionalText(date, evento.getTemporalKind() == TemporalKind.LUGAR_PERMANENTE
+                    ? itemView.getContext().getString(R.string.permanent_place)
+                    : temporalEvent == null ? null : temporalEvent.getPeriodoFormateado());
+            setOptionalText(district, evento.getAddress() == null
+                    ? evento.getDistrito()
+                    : evento.getDistrito() == null ? evento.getAddress()
+                    : evento.getAddress() + " · " + evento.getDistrito());
+            setOptionalText(schedule, evento.getSchedule());
+            freeBadge.setVisibility(evento.getPriceStatus() == PriceStatus.GRATIS ? View.VISIBLE : View.GONE);
+            ongoingBadge.setVisibility(temporalEvent != null && temporalEvent.isEnCurso(FiltroEventos.MADRID_ZONE)
                     ? View.VISIBLE
                     : View.GONE);
             finishedBadge.setVisibility(showFinished
-                    && evento.isFinalizado(FiltroEventos.MADRID_ZONE)
+                    && temporalEvent != null && temporalEvent.isFinalizado(FiltroEventos.MADRID_ZONE)
                     ? View.VISIBLE
                     : View.GONE);
             String favoriteId = evento.getFavoriteDocumentId();
