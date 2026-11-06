@@ -22,7 +22,7 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MadridApiClient {
+public class MadridApiClient implements EventosDataSource {
 
     private static final String ENDPOINT =
             "https://datos.madrid.es/id/api/3/action/datastore_search";
@@ -33,12 +33,6 @@ public class MadridApiClient {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-
-    public interface Callback {
-        void onSuccess(List<Evento> eventos);
-
-        void onError(Exception error);
-    }
 
     public void obtenerEventos(int limit, int offset, Callback callback) {
         if (limit <= 0 || offset < 0) {
@@ -56,7 +50,8 @@ public class MadridApiClient {
         });
     }
 
-    public void obtenerTodosLosEventos(Callback callback) {
+    @Override
+    public void obtenerTodosLosEventos(EventosDataSource.Callback callback) {
         executor.execute(() -> {
             try {
                 List<Evento> allEvents = new ArrayList<>();
@@ -81,6 +76,7 @@ public class MadridApiClient {
         });
     }
 
+    @Override
     public void cerrar() {
         executor.shutdownNow();
     }

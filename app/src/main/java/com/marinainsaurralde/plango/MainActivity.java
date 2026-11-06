@@ -35,6 +35,8 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.marinainsaurralde.plango.data.MadridApiClient;
+import com.marinainsaurralde.plango.data.DeportesApiClient;
+import com.marinainsaurralde.plango.data.EventosMultifuenteLoader;
 import com.marinainsaurralde.plango.data.EventosStore;
 import com.marinainsaurralde.plango.data.ConsultasRepository;
 import com.marinainsaurralde.plango.data.ConsultaEstadisticas;
@@ -64,7 +66,8 @@ public class MainActivity extends AppCompatActivity {
     private static final LatLng MADRID_CENTER = new LatLng(40.4168, -3.7038);
     private static final float MADRID_ZOOM = 11.5f;
 
-    private final MadridApiClient madridApiClient = new MadridApiClient();
+    private final EventosMultifuenteLoader eventosLoader = new EventosMultifuenteLoader(
+            new MadridApiClient(), new DeportesApiClient());
     private final EventosStore eventosStore = EventosStore.getInstance();
     private List<Evento> mapEvents = Collections.emptyList();
     private GoogleMap googleMap;
@@ -236,26 +239,27 @@ public class MainActivity extends AppCompatActivity {
         downloadInProgress=true; findViewById(R.id.buttonRefreshEvents).setEnabled(false);
         eventsRequested = true;
         showMapLoading();
-        madridApiClient.obtenerTodosLosEventos(new MadridApiClient.Callback() {
-            @Override
-            public void onSuccess(List<Evento> eventos) {
-                eventosStore.setEventos(eventos);
+        eventosLoader.cargar(result -> {
+            if (!result.hasAnySuccess()) {
+                if (isFinishing() || isDestroyed()) return;
+                finishDownload();
+                if(eventosStore.isLoaded()){findViewById(R.id.progressMapEvents).setVisibility(View.GONE);Snackbar.make(findViewById(R.id.main),R.string.refresh_error,Snackbar.LENGTH_LONG).show();}else showMapError();
+                return;
+            }
+            List<Evento> eventos = result.getEventos();
+            eventosStore.setEventos(eventos);
+            if (result.isComplete()) {
                 ConsultaHistorial stats=ConsultaEstadisticas.calcular(eventos,manual?"manual":"automatica");
                 ConsultasRepository.getInstance().guardar(startUid,downloadId,stats,new ConsultasRepository.SaveCallback(){
                     @Override public void onSuccess(){if(manual&&!isFinishing()&&!isDestroyed())Snackbar.make(findViewById(R.id.main),R.string.refresh_success,Snackbar.LENGTH_LONG).show();}
                     @Override public void onError(Exception error){if(!isFinishing()&&!isDestroyed())Snackbar.make(findViewById(R.id.main),R.string.history_save_error,Snackbar.LENGTH_LONG).show();}
                 });
-                if (isFinishing() || isDestroyed()) return;
-                populateDistricts(); applyFilters(); finishDownload(); updateLastRefreshText();
             }
-
-            @Override
-            public void onError(Exception error) {
-                if (isFinishing() || isDestroyed()) {
-                    return;
-                }
-                finishDownload();
-                if(eventosStore.isLoaded()){findViewById(R.id.progressMapEvents).setVisibility(View.GONE);Snackbar.make(findViewById(R.id.main),R.string.refresh_error,Snackbar.LENGTH_LONG).show();}else showMapError();
+            if (isFinishing() || isDestroyed()) return;
+            populateDistricts(); applyFilters(); finishDownload(); updateLastRefreshText();
+            if (!result.isComplete()) {
+                Snackbar.make(findViewById(R.id.main), R.string.events_partial_results,
+                        Snackbar.LENGTH_LONG).show();
             }
         });
     }
@@ -527,7 +531,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        madridApiClient.cerrar();
+        eventosLoader.cerrar();
         super.onDestroy();
     }
 }
