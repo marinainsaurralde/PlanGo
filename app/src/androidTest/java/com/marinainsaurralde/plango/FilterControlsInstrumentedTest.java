@@ -17,6 +17,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.marinainsaurralde.plango.data.EventosStore;
 import com.marinainsaurralde.plango.model.Evento;
 import com.marinainsaurralde.plango.model.FiltroEventos;
+import com.marinainsaurralde.plango.model.Plan;
 import com.marinainsaurralde.plango.ui.FiltrosViewBinder;
 
 import org.junit.Test;
@@ -42,14 +43,14 @@ public class FilterControlsInstrumentedTest {
                 InstrumentationRegistry.getInstrumentation().getTargetContext(),
                 R.style.Theme_PlanGo
         );
-        AtomicReference<List<Evento>> visibleEvents = new AtomicReference<>();
+        AtomicReference<List<Plan>> visibleEvents = new AtomicReference<>();
         AtomicReference<FilterView> firstView = new AtomicReference<>();
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
             FilterView view = createFilterView(context);
             firstView.set(view);
             FiltrosViewBinder binder = new FiltrosViewBinder(view.root, store, () -> {
-                List<Evento> filtered = FiltroEventos.aplicar(
+                List<Plan> filtered = FiltroEventos.aplicar(
                         store.getEventos(),
                         store.getCriterios(),
                         java.time.LocalDate.of(2026, 11, 4)
@@ -69,7 +70,7 @@ public class FilterControlsInstrumentedTest {
                     store.getCriterios().getPeriodo());
             assertEquals("2", view.counter.getText().toString());
 
-            List<Evento> listResults = FiltroEventos.aplicar(
+            List<Plan> listResults = FiltroEventos.aplicar(
                     store.getEventos(),
                     store.getCriterios(),
                     java.time.LocalDate.of(2026, 11, 4)

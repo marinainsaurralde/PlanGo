@@ -16,6 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.marinainsaurralde.plango.model.Evento;
+import com.marinainsaurralde.plango.model.Plan;
 import com.marinainsaurralde.plango.ui.EventoAdapter;
 
 import org.junit.Test;
@@ -33,7 +34,7 @@ public class EventUiInstrumentedTest {
         Context themedContext = new ContextThemeWrapper(targetContext, R.style.Theme_PlanGo);
         FrameLayout parent = new FrameLayout(themedContext);
         Evento evento = sampleEvent();
-        AtomicReference<Evento> clickedEvent = new AtomicReference<>();
+        AtomicReference<Plan> clickedEvent = new AtomicReference<>();
         EventoAdapter adapter = new EventoAdapter(clickedEvent::set);
         adapter.setEventos(Collections.singletonList(evento));
 

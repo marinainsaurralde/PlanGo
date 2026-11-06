@@ -47,6 +47,8 @@ public final class FavoritoMapper {
         put(values, "description", evento.getDescription());
         put(values, "address", evento.getAddress());
         put(values, "schedule", evento.getSchedule());
+        put(values, "priceInfo", evento.getPriceInfo());
+        values.put("sourceRefs", new HashMap<>(evento.getSourceRefs()));
         put(values, "priceStatus", evento.getPriceStatus().name());
         put(values, "lastSourceUpdate", evento.getLastSourceUpdate());
         values.put("gratuidadInformada", evento.getPriceStatus() != PriceStatus.DESCONOCIDO);
@@ -65,12 +67,14 @@ public final class FavoritoMapper {
                 .description(string(values.get("description")))
                 .address(string(values.get("address")))
                 .schedule(string(values.get("schedule")))
+                .priceInfo(string(values.get("priceInfo")))
                 .priceStatus(priceStatus)
                 .lastSourceUpdate(string(values.get("lastSourceUpdate")))
                 .distrito(string(values.get("distrito")))
                 .coordinates(number(values.get("latitud")), number(values.get("longitud")))
                 .nombreInstalacion(string(values.get("instalacion")))
                 .urlOficial(string(values.get("urlOficial")));
+        plan.sourceRefs(stringMap(values.get("sourceRefs")));
         if (planTemporalKind(values) == TemporalKind.LUGAR_PERMANENTE
                 || PlanIdentity.PARQUE_MADRID.equals(source)) {
             return new Lugar(plan);
@@ -161,4 +165,6 @@ public final class FavoritoMapper {
     private static boolean bool(Object value) {
         return value instanceof Boolean && (Boolean) value;
     }
+
+    private static Map<String,String> stringMap(Object value){if(!(value instanceof Map<?,?>))return Collections.emptyMap();Map<String,String> result=new HashMap<>();for(Map.Entry<?,?> entry:((Map<?,?>)value).entrySet()){String key=string(entry.getKey()),item=string(entry.getValue());if(key!=null&&item!=null)result.put(key,item);}return result;}
 }

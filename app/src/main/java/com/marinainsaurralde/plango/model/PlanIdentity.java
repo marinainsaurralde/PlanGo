@@ -4,6 +4,7 @@ public final class PlanIdentity {
 
     public static final String EVENTO_MADRID = "evento-madrid";
     public static final String PARQUE_MADRID = "parque-madrid";
+    public static final String TURISMO_MADRID = "turismo-madrid";
 
     private PlanIdentity() {
     }

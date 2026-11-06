@@ -14,6 +14,8 @@ import com.marinainsaurralde.plango.model.FiltroEventos;
 import com.marinainsaurralde.plango.model.Plan;
 import com.marinainsaurralde.plango.model.PriceStatus;
 import com.marinainsaurralde.plango.model.TemporalKind;
+import com.marinainsaurralde.plango.model.PlanType;
+import com.marinainsaurralde.plango.model.CategoriaTuristica;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
@@ -91,6 +93,9 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
         private final TextView date;
         private final TextView district;
         private final TextView schedule;
+        private final TextView categories;
+        private final TextView priceInfo;
+        private final TextView source;
         private final TextView freeBadge;
         private final TextView ongoingBadge;
         private final TextView finishedBadge;
@@ -102,6 +107,9 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
             date = itemView.findViewById(R.id.textEventDate);
             district = itemView.findViewById(R.id.textEventDistrict);
             schedule = itemView.findViewById(R.id.textEventSchedule);
+            categories = itemView.findViewById(R.id.textEventCategories);
+            priceInfo = itemView.findViewById(R.id.textEventPriceInfo);
+            source = itemView.findViewById(R.id.textEventSource);
             freeBadge = itemView.findViewById(R.id.textFreeBadge);
             ongoingBadge = itemView.findViewById(R.id.textOngoingBadge);
             finishedBadge = itemView.findViewById(R.id.textFinishedBadge);
@@ -129,6 +137,15 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
                     : evento.getDistrito() == null ? evento.getAddress()
                     : evento.getAddress() + " · " + evento.getDistrito());
             setOptionalText(schedule, evento.getSchedule());
+            List<String> tourismCategories=CategoriaTuristica.labelsFor(evento.getCategoryKeys());
+            setOptionalText(categories,tourismCategories.isEmpty()?null:String.join(" · ",tourismCategories));
+            setOptionalText(priceInfo,evento.getPriceStatus()==PriceStatus.DESCONOCIDO
+                    ?null:evento.getPriceInfo());
+            boolean tourism=evento.getPlanTypes().contains(PlanType.TURISMO);
+            source.setVisibility(tourism?View.VISIBLE:View.GONE);
+            if(tourism)source.setText(evento.getLastSourceUpdate()==null
+                    ?itemView.getContext().getString(R.string.tourism_attribution)
+                    :itemView.getContext().getString(R.string.tourism_source_updated,evento.getLastSourceUpdate()));
             freeBadge.setVisibility(evento.getPriceStatus() == PriceStatus.GRATIS ? View.VISIBLE : View.GONE);
             ongoingBadge.setVisibility(temporalEvent != null && temporalEvent.isEnCurso(FiltroEventos.MADRID_ZONE)
                     ? View.VISIBLE

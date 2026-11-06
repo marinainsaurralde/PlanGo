@@ -55,12 +55,14 @@ public final class EventosMerger {
                 .description(first(general.getDescription(), sports.getDescription()))
                 .address(first(general.getAddress(), sports.getAddress()))
                 .schedule(first(general.getSchedule(), sports.getSchedule()))
+                .priceInfo(first(general.getPriceInfo(), sports.getPriceInfo()))
                 .priceStatus(priceStatus)
                 .lastSourceUpdate(first(general.getLastSourceUpdate(), sports.getLastSourceUpdate()))
                 .distrito(first(general.getDistrito(), sports.getDistrito()))
                 .coordinates(latitude, longitude)
                 .nombreInstalacion(first(general.getNombreInstalacion(), sports.getNombreInstalacion()))
-                .urlOficial(first(general.getUrlOficial(), sports.getUrlOficial()));
+                .urlOficial(first(general.getUrlOficial(), sports.getUrlOficial()))
+                .sourceRefs(general.getSourceRefs()).sourceRefs(sports.getSourceRefs());
         return new Evento(
                 plan,
                 first(general.getFechaInicio(), sports.getFechaInicio()),

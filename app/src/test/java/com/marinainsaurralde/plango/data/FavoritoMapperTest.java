@@ -139,4 +139,6 @@ public class FavoritoMapperTest {
         assertEquals(park.getAddress(), restored.getAddress());
         assertEquals(park.getSchedule(), restored.getSchedule());
     }
+
+    @Test public void tourismRoundTripPreservesPriceAndSourceReferences(){Plan tourism=new Lugar(Plan.builder(PlanIdentity.TURISMO_MADRID,"99","Museo").planType(PlanType.TURISMO).temporalKind(TemporalKind.LUGAR_PERMANENTE).categoryKey("turismo:7172").priceInfo("Entrada general: 12 €").priceStatus(PriceStatus.DE_PAGO).lastSourceUpdate("2026-11-04").sourceRef(PlanIdentity.PARQUE_MADRID,"123"));Plan restored=FavoritoMapper.fromMap(tourism.getFavoriteDocumentId(),FavoritoMapper.toMap(tourism));assertTrue(restored instanceof Lugar);assertEquals("turismo-madrid:99",restored.getFavoriteDocumentId());assertEquals("Entrada general: 12 €",restored.getPriceInfo());assertEquals("99",restored.getSourceRefs().get(PlanIdentity.TURISMO_MADRID));assertEquals("123",restored.getSourceRefs().get(PlanIdentity.PARQUE_MADRID));assertTrue(restored.getPlanTypes().contains(PlanType.TURISMO));}
 }

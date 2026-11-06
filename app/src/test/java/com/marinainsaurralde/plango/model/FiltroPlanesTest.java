@@ -35,4 +35,6 @@ public class FiltroPlanesTest {
                 LocalDate.of(2026,11,6));
         assertTrue(result.isEmpty());
     }
+
+    @Test public void tourismPlaceFollowsPermanentPriceDistrictAndCultureRules(){Plan tourism=new Lugar(Plan.builder(PlanIdentity.TURISMO_MADRID,"t1","Monumento").planType(PlanType.TURISMO).temporalKind(TemporalKind.LUGAR_PERMANENTE).priceStatus(PriceStatus.GRATIS));assertEquals(1,FiltroEventos.aplicar(Arrays.asList(tourism),new FiltroEventos.Criterios(FiltroEventos.Periodo.HOY,false,null),LocalDate.of(2026,11,6)).size());assertEquals(1,FiltroEventos.aplicar(Arrays.asList(tourism),new FiltroEventos.Criterios(FiltroEventos.Periodo.HOY,true,null),LocalDate.of(2026,11,6)).size());assertTrue(FiltroEventos.aplicar(Arrays.asList(tourism),new FiltroEventos.Criterios(FiltroEventos.Periodo.HOY,false,"CENTRO"),LocalDate.of(2026,11,6)).isEmpty());assertTrue(FiltroEventos.aplicar(Arrays.asList(tourism),new FiltroEventos.Criterios(FiltroEventos.Periodo.TODOS,false,null,CategoriaCultural.OTRAS),LocalDate.of(2026,11,6)).isEmpty());}
 }

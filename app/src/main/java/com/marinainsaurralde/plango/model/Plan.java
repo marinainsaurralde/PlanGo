@@ -3,6 +3,8 @@ package com.marinainsaurralde.plango.model;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 public class Plan implements Serializable {
@@ -18,6 +20,7 @@ public class Plan implements Serializable {
     private final String description;
     private final String address;
     private final String schedule;
+    private final String priceInfo;
     private final PriceStatus priceStatus;
     private final String lastSourceUpdate;
     private final String distrito;
@@ -25,6 +28,7 @@ public class Plan implements Serializable {
     private final Double longitud;
     private final String nombreInstalacion;
     private final String urlOficial;
+    private final Map<String, String> sourceRefs;
 
     protected Plan(Builder builder) {
         source = normalize(builder.source);
@@ -36,6 +40,7 @@ public class Plan implements Serializable {
         description = normalize(builder.description);
         address = normalize(builder.address);
         schedule = normalize(builder.schedule);
+        priceInfo = normalize(builder.priceInfo);
         priceStatus = builder.priceStatus == null ? PriceStatus.DESCONOCIDO : builder.priceStatus;
         lastSourceUpdate = normalize(builder.lastSourceUpdate);
         distrito = normalize(builder.distrito);
@@ -43,6 +48,9 @@ public class Plan implements Serializable {
         longitud = builder.longitud;
         nombreInstalacion = normalize(builder.nombreInstalacion);
         urlOficial = normalize(builder.urlOficial);
+        LinkedHashMap<String, String> refs = new LinkedHashMap<>(builder.sourceRefs);
+        if (source != null && sourceId != null) refs.put(source, sourceId);
+        sourceRefs = Collections.unmodifiableMap(refs);
     }
 
     public String getIdentificador() { return sourceId; }
@@ -57,6 +65,7 @@ public class Plan implements Serializable {
     public String getDescription() { return description; }
     public String getAddress() { return address; }
     public String getSchedule() { return schedule; }
+    public String getPriceInfo() { return priceInfo; }
     public PriceStatus getPriceStatus() { return priceStatus; }
     public String getLastSourceUpdate() { return lastSourceUpdate; }
     public String getDistrito() { return distrito; }
@@ -64,6 +73,7 @@ public class Plan implements Serializable {
     public Double getLongitud() { return longitud; }
     public String getNombreInstalacion() { return nombreInstalacion; }
     public String getUrlOficial() { return urlOficial; }
+    public Map<String, String> getSourceRefs() { return sourceRefs; }
 
     public boolean hasValidCoordinates() {
         return latitud != null && longitud != null
@@ -85,6 +95,7 @@ public class Plan implements Serializable {
         private String description;
         private String address;
         private String schedule;
+        private String priceInfo;
         private PriceStatus priceStatus = PriceStatus.DESCONOCIDO;
         private String lastSourceUpdate;
         private String distrito;
@@ -92,6 +103,7 @@ public class Plan implements Serializable {
         private Double longitud;
         private String nombreInstalacion;
         private String urlOficial;
+        private final Map<String, String> sourceRefs = new LinkedHashMap<>();
 
         private Builder(String source, String sourceId, String titulo) {
             this.source = source;
@@ -107,12 +119,15 @@ public class Plan implements Serializable {
         public Builder description(String value) { description = value; return this; }
         public Builder address(String value) { address = value; return this; }
         public Builder schedule(String value) { schedule = value; return this; }
+        public Builder priceInfo(String value) { priceInfo = value; return this; }
         public Builder priceStatus(PriceStatus value) { priceStatus = value; return this; }
         public Builder lastSourceUpdate(String value) { lastSourceUpdate = value; return this; }
         public Builder distrito(String value) { distrito = value; return this; }
         public Builder coordinates(Double latitude, Double longitude) { latitud = latitude; longitud = longitude; return this; }
         public Builder nombreInstalacion(String value) { nombreInstalacion = value; return this; }
         public Builder urlOficial(String value) { urlOficial = value; return this; }
+        public Builder sourceRef(String source, String sourceId) { String s=normalize(source),i=normalize(sourceId);if(s!=null&&i!=null)sourceRefs.put(s,i);return this; }
+        public Builder sourceRefs(Map<String, String> values) { if(values!=null)for(Map.Entry<String,String> entry:values.entrySet())sourceRef(entry.getKey(),entry.getValue());return this; }
         public Plan build() { return new Plan(this); }
     }
 

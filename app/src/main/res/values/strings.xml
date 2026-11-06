@@ -38,6 +38,11 @@
     <string name="plan_schedule">Horario: %1$s</string>
     <string name="plan_description">Descripción: %1$s</string>
     <string name="plan_type_nature">Naturaleza · Lugar permanente</string>
+    <string name="plan_categories">Categorías: %1$s</string>
+    <string name="plan_price_info">Precio: %1$s</string>
+    <string name="tourism_attribution">Origen de los datos: Ayuntamiento de Madrid / Madrid Destino</string>
+    <string name="tourism_source_updated">Origen de los datos: Ayuntamiento de Madrid / Madrid Destino · Actualizado: %1$s</string>
+    <string name="plan_type_tourism">Turismo · Lugar permanente</string>
     <string name="view_list">Ver listado</string>
     <string name="back_to_map">Mapa</string>
     <string name="map_events_error">El mapa está disponible, pero no hemos podido cargar los eventos.</string>

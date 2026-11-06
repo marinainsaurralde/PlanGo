@@ -112,6 +112,18 @@
                 android:layout_height="wrap_content" />
 
             <TextView
+                android:id="@+id/textDetailCategories"
+                style="@style/TextAppearance.PlanGo.DetailField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/textDetailSource"
+                style="@style/TextAppearance.PlanGo.DetailField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
                 android:id="@+id/textDetailVenue"
                 style="@style/TextAppearance.PlanGo.DetailField"
                 android:layout_width="match_parent"

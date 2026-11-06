@@ -27,6 +27,7 @@ public class EventosMultifuenteLoaderTest {
         EventosMultifuenteLoader loader = new EventosMultifuenteLoader(
                 new FakeSource(Collections.singletonList(event), null),
                 new FakeSource(null, new IllegalStateException("sports unavailable")),
+                new FakePlanSource(Collections.emptyList(), null),
                 new FakePlanSource(Collections.emptyList(), null));
         AtomicReference<EventosMultifuenteLoader.Result> captured = new AtomicReference<>();
         AtomicInteger callbacks = new AtomicInteger();
@@ -40,11 +41,12 @@ public class EventosMultifuenteLoaderTest {
     }
 
     @Test
-    public void bothFailuresReturnNoSuccessfulSource() {
+    public void allFailuresReturnNoSuccessfulSource() {
         EventosMultifuenteLoader loader = new EventosMultifuenteLoader(
                 new FakeSource(null, new IllegalStateException("culture unavailable")),
                 new FakeSource(null, new IllegalStateException("sports unavailable")),
-                new FakePlanSource(null, new IllegalStateException("parks unavailable")));
+                new FakePlanSource(null, new IllegalStateException("parks unavailable")),
+                new FakePlanSource(null, new IllegalStateException("tourism unavailable")));
         AtomicReference<EventosMultifuenteLoader.Result> captured = new AtomicReference<>();
 
         loader.cargar(captured::set);
@@ -62,7 +64,8 @@ public class EventosMultifuenteLoaderTest {
         EventosMultifuenteLoader loader = new EventosMultifuenteLoader(
                 new FakeSource(Collections.singletonList(event),null),
                 new FakeSource(Collections.emptyList(),null),
-                new FakePlanSource(java.util.Arrays.asList(park,park),null));
+                new FakePlanSource(java.util.Arrays.asList(park,park),null),
+                new FakePlanSource(Collections.emptyList(),null));
         AtomicReference<EventosMultifuenteLoader.Result> captured=new AtomicReference<>();
         loader.cargar(captured::set);
         assertTrue(captured.get().isComplete());
@@ -75,13 +78,16 @@ public class EventosMultifuenteLoaderTest {
         EventosMultifuenteLoader loader = new EventosMultifuenteLoader(
                 new FakeSource(Collections.singletonList(event),null),
                 new FakeSource(Collections.emptyList(),null),
-                new FakePlanSource(null,new IllegalStateException("parks unavailable")));
+                new FakePlanSource(null,new IllegalStateException("parks unavailable")),
+                new FakePlanSource(Collections.emptyList(),null));
         AtomicReference<EventosMultifuenteLoader.Result> captured=new AtomicReference<>();
         loader.cargar(captured::set);
         assertTrue(captured.get().hasAnySuccess());
         assertFalse(captured.get().isComplete());
         assertEquals(1,captured.get().getPlanes().size());
     }
+
+    @Test public void tourismFailureKeepsOtherSourcesAndPreventsCompleteHistoryState(){Evento event=new Evento("1","Evento",null,null,null,null,false,false,null,null,null,null,null,null,null,null);EventosMultifuenteLoader loader=new EventosMultifuenteLoader(new FakeSource(Collections.singletonList(event),null),new FakeSource(Collections.emptyList(),null),new FakePlanSource(Collections.emptyList(),null),new FakePlanSource(null,new IllegalStateException("tourism unavailable")));AtomicReference<EventosMultifuenteLoader.Result> captured=new AtomicReference<>();loader.cargar(captured::set);assertTrue(captured.get().hasAnySuccess());assertFalse(captured.get().isComplete());assertEquals(1,captured.get().getPlanes().size());assertTrue(captured.get().getTourismError()!=null);}
 
     private static final class FakeSource implements EventosDataSource {
         private final List<Evento> values;

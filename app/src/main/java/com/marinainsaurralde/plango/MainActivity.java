@@ -37,6 +37,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.marinainsaurralde.plango.data.MadridApiClient;
 import com.marinainsaurralde.plango.data.DeportesApiClient;
 import com.marinainsaurralde.plango.data.ParquesApiClient;
+import com.marinainsaurralde.plango.data.TurismoApiClient;
 import com.marinainsaurralde.plango.data.EventosMultifuenteLoader;
 import com.marinainsaurralde.plango.data.EventosStore;
 import com.marinainsaurralde.plango.data.ConsultasRepository;
@@ -71,7 +72,8 @@ public class MainActivity extends AppCompatActivity {
     private static final float MADRID_ZOOM = 11.5f;
 
     private final EventosMultifuenteLoader eventosLoader = new EventosMultifuenteLoader(
-            new MadridApiClient(), new DeportesApiClient(), new ParquesApiClient());
+            new MadridApiClient(), new DeportesApiClient(), new ParquesApiClient(),
+            new TurismoApiClient());
     private final EventosStore eventosStore = EventosStore.getInstance();
     private List<Plan> mapEvents = Collections.emptyList();
     private GoogleMap googleMap;
@@ -441,6 +443,8 @@ public class MainActivity extends AppCompatActivity {
                 options.title(evento.getTitulo()==null?getString(R.string.event_without_title):evento.getTitulo())
                         .icon(evento.getPlanTypes().contains(PlanType.NATURALEZA)
                                 ? markerIconFactory.nature()
+                                : evento.getPlanTypes().contains(PlanType.TURISMO)
+                                ? markerIconFactory.tourism()
                                 : markerIconFactory.single(CategoriaCultural.clasificar((Evento) evento)));
                 List<String> details=new ArrayList<>();
                 if(evento.getNombreInstalacion()!=null)details.add(evento.getNombreInstalacion());

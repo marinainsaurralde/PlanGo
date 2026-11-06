@@ -15,6 +15,8 @@ import com.marinainsaurralde.plango.model.Evento;
 import com.marinainsaurralde.plango.model.Plan;
 import com.marinainsaurralde.plango.model.PriceStatus;
 import com.marinainsaurralde.plango.model.TemporalKind;
+import com.marinainsaurralde.plango.model.PlanType;
+import com.marinainsaurralde.plango.model.CategoriaTuristica;
 import com.marinainsaurralde.plango.data.FavoritosRepository;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -111,12 +113,24 @@ public class DetalleEventoActivity extends AppCompatActivity {
         setOptionalField(R.id.textDetailAddress, R.string.plan_address, evento.getAddress());
         setOptionalField(R.id.textDetailSchedule, R.string.plan_schedule, evento.getSchedule());
         setOptionalField(R.id.textDetailDescription, R.string.plan_description, evento.getDescription());
+        java.util.List<String> tourismCategories=CategoriaTuristica.labelsFor(evento.getCategoryKeys());
+        setOptionalField(R.id.textDetailCategories,R.string.plan_categories,
+                tourismCategories.isEmpty()?null:String.join(" · ",tourismCategories));
+        TextView source=findViewById(R.id.textDetailSource);
+        boolean tourism=evento.getPlanTypes().contains(PlanType.TURISMO);
+        source.setVisibility(tourism?View.VISIBLE:View.GONE);
+        if(tourism)source.setText(evento.getLastSourceUpdate()==null
+                ?getString(R.string.tourism_attribution)
+                :getString(R.string.tourism_source_updated,evento.getLastSourceUpdate()));
         setOptionalField(R.id.textDetailVenue, R.string.event_venue, evento.getNombreInstalacion());
         setOptionalField(R.id.textDetailTime, R.string.event_time, temporalEvent == null ? null : temporalEvent.getHora());
-        setOptionalField(R.id.textDetailPrice, R.string.event_price, temporalEvent == null ? null : temporalEvent.getPrecio());
+        setOptionalField(R.id.textDetailPrice, R.string.event_price,
+                evento.getPriceStatus()!=PriceStatus.DESCONOCIDO&&evento.getPriceInfo()!=null
+                        ?evento.getPriceInfo():temporalEvent == null ? null : temporalEvent.getPrecio());
         setOptionalField(R.id.textDetailType, R.string.event_type,
                 evento.getTemporalKind() == TemporalKind.LUGAR_PERMANENTE
-                        ? getString(R.string.plan_type_nature)
+                        ? getString(evento.getPlanTypes().contains(PlanType.TURISMO)
+                        ? R.string.plan_type_tourism : R.string.plan_type_nature)
                         : temporalEvent == null ? null : temporalEvent.getTipo());
         setOptionalField(R.id.textDetailUrl, R.string.event_url, evento.getUrlOficial());
         TextView coordinates = findViewById(R.id.textDetailCoordinates);
