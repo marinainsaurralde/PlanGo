@@ -27,6 +27,7 @@ public final class FavoritosRepository {
     }
 
     public interface OperationCallback {
+        default void onSuccess() { }
         void onError(Exception error);
     }
 
@@ -110,6 +111,7 @@ public final class FavoritosRepository {
         } else {
             task = collection.document(eventId).delete();
         }
+        task.addOnSuccessListener(unused -> callback.onSuccess());
         task.addOnFailureListener(error -> {
             synchronized (FavoritosRepository.this) {
                 pendingTargets.remove(eventId);

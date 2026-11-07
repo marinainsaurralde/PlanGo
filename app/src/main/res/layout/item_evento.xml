@@ -36,6 +36,16 @@
                 android:textStyle="bold" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonReminder"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="4dp"
+                android:visibility="gone"
+                app:icon="@drawable/ic_notifications_24"
+                app:iconTint="@color/plango_text_secondary" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonFavorite"
                 style="@style/Widget.Material3.Button.IconButton"
                 android:layout_width="48dp"

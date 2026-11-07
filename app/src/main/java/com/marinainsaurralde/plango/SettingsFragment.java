@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.marinainsaurralde.plango.data.AppPreferences;
 import com.marinainsaurralde.plango.data.EventosStore;
+import com.marinainsaurralde.plango.data.ReminderScheduler;
 
 import java.util.Set;
 
@@ -91,12 +92,15 @@ public final class SettingsFragment extends PreferenceFragmentCompat {
     }
 
     private void signOut() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        String signingOutUid = currentUser == null ? null : currentUser.getUid();
         AuthUI.getInstance().signOut(requireContext()).addOnCompleteListener(task -> {
             if (!isAdded()) return;
             if (!task.isSuccessful()) {
                 Snackbar.make(requireView(), R.string.sign_out_error, Snackbar.LENGTH_LONG).show();
                 return;
             }
+            new ReminderScheduler(requireContext()).cancelForUser(signingOutUid);
             EventosStore.getInstance().endSession();
             Intent intent = new Intent(requireContext(), MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

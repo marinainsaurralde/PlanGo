@@ -1,11 +1,13 @@
 package com.marinainsaurralde.plango.ui;
 
+import android.content.res.ColorStateList;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.marinainsaurralde.plango.R;
@@ -16,12 +18,14 @@ import com.marinainsaurralde.plango.model.PriceStatus;
 import com.marinainsaurralde.plango.model.TemporalKind;
 import com.marinainsaurralde.plango.model.PlanType;
 import com.marinainsaurralde.plango.model.CategoriaTuristica;
+import com.marinainsaurralde.plango.model.EventReminder;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
 import java.util.Set;
+import java.time.Instant;
 
 public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoViewHolder> {
 
@@ -33,11 +37,17 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
         void onFavoritoClick(Plan evento);
     }
 
+    public interface OnReminderClickListener {
+        void onReminderClick(Plan evento);
+    }
+
     private final List<Plan> eventos = new ArrayList<>();
     private final OnEventoClickListener listener;
     private final OnFavoritoClickListener favoriteListener;
+    private final OnReminderClickListener reminderListener;
     private Set<String> favoriteIds = Collections.emptySet();
     private Set<String> pendingIds = Collections.emptySet();
+    private Set<String> reminderIds = Collections.emptySet();
     private boolean showFinished;
 
     public EventoAdapter(OnEventoClickListener listener) {
@@ -45,8 +55,19 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
     }
 
     public EventoAdapter(OnEventoClickListener listener, OnFavoritoClickListener favoriteListener) {
+        this(listener, favoriteListener, null);
+    }
+
+    public EventoAdapter(OnEventoClickListener listener, OnFavoritoClickListener favoriteListener,
+                         OnReminderClickListener reminderListener) {
         this.listener = listener;
         this.favoriteListener = favoriteListener;
+        this.reminderListener = reminderListener;
+    }
+
+    public void setReminderState(Set<String> reminders) {
+        reminderIds = reminders == null ? Collections.emptySet() : reminders;
+        notifyDataSetChanged();
     }
 
     public void setFavoriteState(Set<String> favorites, Set<String> pending) {
@@ -79,7 +100,7 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
     @Override
     public void onBindViewHolder(@NonNull EventoViewHolder holder, int position) {
         holder.bind(eventos.get(position), listener, favoriteListener,
-                favoriteIds, pendingIds, showFinished);
+                reminderListener, favoriteIds, pendingIds, reminderIds, showFinished);
     }
 
     @Override
@@ -100,6 +121,7 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
         private final TextView ongoingBadge;
         private final TextView finishedBadge;
         private final MaterialButton favoriteButton;
+        private final MaterialButton reminderButton;
 
         EventoViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -114,14 +136,17 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
             ongoingBadge = itemView.findViewById(R.id.textOngoingBadge);
             finishedBadge = itemView.findViewById(R.id.textFinishedBadge);
             favoriteButton = itemView.findViewById(R.id.buttonFavorite);
+            reminderButton = itemView.findViewById(R.id.buttonReminder);
         }
 
         void bind(
                 Plan evento,
                 OnEventoClickListener listener,
                 OnFavoritoClickListener favoriteListener,
+                OnReminderClickListener reminderListener,
                 Set<String> favoriteIds,
                 Set<String> pendingIds,
+                Set<String> reminderIds,
                 boolean showFinished
         ) {
             title.setText(evento.getTitulo() == null
@@ -169,6 +194,18 @@ public class EventoAdapter extends RecyclerView.Adapter<EventoAdapter.EventoView
                 if (favoriteListener != null) {
                     favoriteListener.onFavoritoClick(evento);
                 }
+            });
+            boolean reminderActive = hasId && reminderIds.contains(favoriteId);
+            boolean canCreateReminder = !EventReminder.availableOptions(evento, Instant.now()).isEmpty();
+            reminderButton.setVisibility(reminderListener != null
+                    && (reminderActive || canCreateReminder) ? View.VISIBLE : View.GONE);
+            reminderButton.setIconTint(ColorStateList.valueOf(ContextCompat.getColor(
+                    itemView.getContext(), reminderActive
+                            ? R.color.plango_coral : R.color.plango_text_secondary)));
+            reminderButton.setContentDescription(itemView.getContext().getString(
+                    reminderActive ? R.string.reminder_active : R.string.reminder_add));
+            reminderButton.setOnClickListener(view -> {
+                if (reminderListener != null) reminderListener.onReminderClick(evento);
             });
             itemView.setOnClickListener(view -> listener.onEventoClick(evento));
         }

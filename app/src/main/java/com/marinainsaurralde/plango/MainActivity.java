@@ -45,6 +45,7 @@ import com.marinainsaurralde.plango.data.ConsultaEstadisticas;
 import com.marinainsaurralde.plango.data.AgrupadorEventos;
 import com.marinainsaurralde.plango.data.AppPreferences;
 import com.marinainsaurralde.plango.data.FavoritosRepository;
+import com.marinainsaurralde.plango.data.ReminderScheduler;
 import com.marinainsaurralde.plango.model.Evento;
 import com.marinainsaurralde.plango.model.Plan;
 import com.marinainsaurralde.plango.model.PlanType;
@@ -178,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
         boolean newSession = eventosStore.initializeSession(
                 user.getUid(), preferences.initialCriteria());
         if (newSession) {
+            new ReminderScheduler(this).restoreForUser(user.getUid());
             pendingInitialList = preferences.startsInList();
             initialViewHandled = false;
             if (filtrosViewBinder != null) filtrosViewBinder.syncSelection();
