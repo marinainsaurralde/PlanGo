@@ -73,4 +73,19 @@
     <string name="events_marker_count">%1$d eventos en esta ubicación</string><string name="shared_location">Ubicación compartida</string><plurals name="events_at_location"><item quantity="one">%d evento en esta ubicación</item><item quantity="other">%d eventos en esta ubicación</item></plurals>
     <string name="all_categories">Todas las categorías</string><string name="category_sheet_title">¿Qué tipo de plan?</string><string name="category_theater">Teatro y espectáculos</string><string name="category_music">Música</string><string name="category_cinema">Cine</string><string name="category_exhibitions">Exposiciones</string><string name="category_workshops">Talleres y actividades</string><string name="category_conferences">Conferencias</string><string name="category_other">Otras actividades</string>
     <string name="events_partial_results">Se muestran resultados parciales: una fuente no está disponible.</string>
+    <string name="explore_plans_tab">🧭 Explorar planes ▲</string>
+    <string name="explore_plans_title">Explorar planes</string>
+    <string name="explore_plans_hint">Combina tipos y categorías para encontrar tu próximo plan.</string>
+    <string name="plan_type_culture">Cultura</string>
+    <string name="plan_type_sport">Deportes</string>
+    <string name="plan_type_nature_short">Naturaleza</string>
+    <string name="plan_type_tourism_short">Turismo</string>
+    <string name="apply_plan_filters">Aplicar</string>
+    <string name="clear_plan_filters">Deseleccionar todo</string>
+    <string name="select_all_plan_filters">Seleccionar todo</string>
+    <string name="select_plan_type_empty">Seleccioná un tipo de plan para comenzar a explorar Madrid</string>
+    <string name="categories_open">Categorías abiertas</string>
+    <string name="nature_all_included">Se incluyen todos los parques y jardines</string>
+    <string name="add_plan_type_filter">Añadir al filtro</string>
+    <string name="remove_plan_type_filter">Quitar del filtro</string>
 </resources>

@@ -56,6 +56,7 @@ import com.marinainsaurralde.plango.ui.DistritoAdapter;
 import com.marinainsaurralde.plango.ui.FiltrosViewBinder;
 import com.marinainsaurralde.plango.ui.MarkerIconFactory;
 import com.marinainsaurralde.plango.ui.EventoAdapter;
+import com.marinainsaurralde.plango.ui.ExplorarPlanesBottomSheet;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -80,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
     private boolean eventsRequested;
     private FiltrosViewBinder filtrosViewBinder;
     private List<String> availableDistricts = Collections.emptyList();
-    private List<CategoriaCultural> availableCategories = Collections.emptyList();
     private boolean downloadInProgress;
     private final MarkerIconFactory markerIconFactory = new MarkerIconFactory();
 
@@ -113,7 +113,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.buttonRetryMapEvents).setOnClickListener(view -> loadMapEvents(false));
         setupFilters();
         findViewById(R.id.buttonDistrict).setOnClickListener(view -> showDistrictBottomSheet());
-        findViewById(R.id.buttonCategory).setOnClickListener(view -> showCategoryBottomSheet());
+        findViewById(R.id.buttonExplorePlans).setOnClickListener(view ->
+                new ExplorarPlanesBottomSheet(this, eventosStore, this::applyFilters).show());
 
         SupportMapFragment mapFragment = (SupportMapFragment)
                 getSupportFragmentManager().findFragmentById(R.id.mapFragment);
@@ -285,14 +286,11 @@ public class MainActivity extends AppCompatActivity {
         );
         filtrosViewBinder.bind();
         updateDistrictButton();
-        updateCategoryButton();
     }
 
     private void populateDistricts() {
         availableDistricts = FiltroEventos.distritosDisponibles(eventosStore.getEventos());
-        availableCategories = FiltroEventos.categoriasDisponibles(eventosStore.getEventos());
         updateDistrictButton();
-        updateCategoryButton();
     }
 
     private void updateDistrict(String district) {
@@ -301,27 +299,13 @@ public class MainActivity extends AppCompatActivity {
                 current.getPeriodo(),
                 current.isSoloGratuitos(),
                 district,
-                current.getCategoria()
+                current.getPlanSelection()
         );
         eventosStore.setCriterios(updated);
         updateDistrictButton();
         if (eventosStore.isLoaded()) {
             applyFilters();
         }
-    }
-
-    private void updateCategory(CategoriaCultural category) {
-        FiltroEventos.Criterios current = eventosStore.getCriterios();
-        eventosStore.setCriterios(new FiltroEventos.Criterios(
-                current.getPeriodo(), current.isSoloGratuitos(), current.getDistrito(), category));
-        updateCategoryButton();
-        if (eventosStore.isLoaded()) applyFilters();
-    }
-
-    private void updateCategoryButton() {
-        CategoriaCultural selected = eventosStore.getCriterios().getCategoria();
-        ((MaterialButton) findViewById(R.id.buttonCategory)).setText(
-                selected == null ? getString(R.string.all_categories) : categoryLabel(selected));
     }
 
     private void updateDistrictButton() {
@@ -374,43 +358,6 @@ public class MainActivity extends AppCompatActivity {
             @Override public void afterTextChanged(Editable s) { }
         });
         dialog.show();
-    }
-
-    private void showCategoryBottomSheet() {
-        BottomSheetDialog dialog = new BottomSheetDialog(this);
-        View content = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_category, null);
-        dialog.setContentView(content);
-        List<String> labels = new ArrayList<>();
-        labels.add(getString(R.string.all_categories));
-        for (CategoriaCultural category : availableCategories) labels.add(categoryLabel(category));
-        CategoriaCultural selected = eventosStore.getCriterios().getCategoria();
-        DistritoAdapter adapter = new DistritoAdapter(
-                selected == null ? getString(R.string.all_categories) : categoryLabel(selected),
-                label -> {
-                    CategoriaCultural chosen = null;
-                    for (CategoriaCultural category : availableCategories) {
-                        if (categoryLabel(category).equals(label)) { chosen = category; break; }
-                    }
-                    updateCategory(chosen);
-                    dialog.dismiss();
-                });
-        adapter.submitList(labels);
-        RecyclerView list = content.findViewById(R.id.listCategories);
-        list.setLayoutManager(new LinearLayoutManager(this));
-        list.setAdapter(adapter);
-        dialog.show();
-    }
-
-    private String categoryLabel(CategoriaCultural category) {
-        switch (category) {
-            case TEATRO_ESPECTACULOS: return getString(R.string.category_theater);
-            case MUSICA: return getString(R.string.category_music);
-            case CINE: return getString(R.string.category_cinema);
-            case EXPOSICIONES: return getString(R.string.category_exhibitions);
-            case TALLERES_ACTIVIDADES: return getString(R.string.category_workshops);
-            case CONFERENCIAS: return getString(R.string.category_conferences);
-            default: return getString(R.string.category_other);
-        }
     }
 
     private void applyFilters() {
@@ -515,7 +462,10 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.progressMapEvents).setVisibility(View.GONE);
         findViewById(R.id.layoutMapState).setVisibility(empty ? View.VISIBLE : View.GONE);
         if (empty) {
-            ((TextView) findViewById(R.id.textMapState)).setText(R.string.no_filtered_events);
+            ((TextView) findViewById(R.id.textMapState)).setText(
+                    eventosStore.getCriterios().getPlanSelection().getSelectedTypes().isEmpty()
+                            ? R.string.select_plan_type_empty
+                            : R.string.no_filtered_events);
             findViewById(R.id.buttonRetryMapEvents).setVisibility(View.GONE);
         }
     }
@@ -539,7 +489,7 @@ public class MainActivity extends AppCompatActivity {
         if (filtrosViewBinder != null) {
             filtrosViewBinder.syncSelection();
             updateDistrictButton();
-            updateCategoryButton();
+            if (eventosStore.isLoaded()) applyFilters();
         }
     }
 

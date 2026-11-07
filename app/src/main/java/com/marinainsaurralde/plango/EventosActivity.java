@@ -19,6 +19,7 @@ import com.marinainsaurralde.plango.data.FavoritosRepository;
 import com.marinainsaurralde.plango.model.Plan;
 import com.marinainsaurralde.plango.model.FiltroEventos;
 import com.marinainsaurralde.plango.ui.EventoAdapter;
+import com.marinainsaurralde.plango.ui.ExplorarPlanesBottomSheet;
 
 import java.util.List;
 import com.google.android.material.snackbar.Snackbar;
@@ -51,6 +52,8 @@ public class EventosActivity extends AppCompatActivity {
 
         findViewById(R.id.buttonBackToMap).setOnClickListener(view -> finish());
         findViewById(R.id.buttonRetryEvents).setOnClickListener(view -> finish());
+        findViewById(R.id.buttonExplorePlans).setOnClickListener(view ->
+                new ExplorarPlanesBottomSheet(this, eventosStore, this::showEvents).show());
 
         RecyclerView eventsList = findViewById(R.id.recyclerEvents);
         eventsList.setLayoutManager(new LinearLayoutManager(this));
@@ -80,6 +83,11 @@ public class EventosActivity extends AppCompatActivity {
     @Override protected void onStart() {
         super.onStart();
         favoritosRepository.addListener(favoritosListener);
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        if (eventoAdapter != null) showEvents();
     }
 
     @Override protected void onStop() {
@@ -118,7 +126,10 @@ public class EventosActivity extends AppCompatActivity {
         findViewById(R.id.recyclerEvents).setVisibility(empty ? View.GONE : View.VISIBLE);
         findViewById(R.id.layoutEventState).setVisibility(empty ? View.VISIBLE : View.GONE);
         if (empty) {
-            ((TextView) findViewById(R.id.textEventState)).setText(R.string.no_events);
+            ((TextView) findViewById(R.id.textEventState)).setText(
+                    eventosStore.getCriterios().getPlanSelection().getSelectedTypes().isEmpty()
+                            ? R.string.select_plan_type_empty
+                            : R.string.no_events);
             findViewById(R.id.buttonRetryEvents).setVisibility(View.GONE);
         }
     }

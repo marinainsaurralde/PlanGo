@@ -30,7 +30,8 @@ public class CategoriaCulturalTest {
                 event("otherDistrict","/Musica","RETIRO",true,40.1),
                 event("cinema","/CineActividadesAudiovisuales","CENTRO",true,40.1));
         FiltroEventos.Criterios criteria=new FiltroEventos.Criterios(
-                FiltroEventos.Periodo.HOY,true,"CENTRO",CategoriaCultural.MUSICA);
+                FiltroEventos.Periodo.HOY,true,"CENTRO",
+                PlanFilterSelection.soloCategoriaCultural(CategoriaCultural.MUSICA));
         List<GrupoUbicacion> unfilteredGroups=AgrupadorEventos.agrupar(events);
         List<Evento> filtered=FiltroEventos.aplicar(events,criteria,LocalDate.of(2026,11,5));
         assertEquals(4,unfilteredGroups.get(0).size());

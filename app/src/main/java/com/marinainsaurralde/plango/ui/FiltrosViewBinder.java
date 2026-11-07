@@ -32,7 +32,7 @@ public final class FiltrosViewBinder {
                     periodFor(checkedId),
                     current.isSoloGratuitos(),
                     current.getDistrito(),
-                    current.getCategoria()
+                    current.getPlanSelection()
             ));
             onFiltersChanged.run();
         });
@@ -45,7 +45,7 @@ public final class FiltrosViewBinder {
                     current.getPeriodo(),
                     checked,
                     current.getDistrito(),
-                    current.getCategoria()
+                    current.getPlanSelection()
             ));
             onFiltersChanged.run();
         });

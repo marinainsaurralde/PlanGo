@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="buttonPlanTypeCulture" type="id" />
+    <item name="buttonPlanTypeSport" type="id" />
+    <item name="buttonPlanTypeNature" type="id" />
+    <item name="buttonPlanTypeTourism" type="id" />
+    <item name="bodyPlanTypeCulture" type="id" />
+    <item name="bodyPlanTypeSport" type="id" />
+    <item name="bodyPlanTypeNature" type="id" />
+    <item name="bodyPlanTypeTourism" type="id" />
+    <item name="buttonToggleOpenPlanType" type="id" />
+</resources>

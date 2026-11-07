@@ -77,6 +77,20 @@
             tools:listitem="@layout/item_evento"
             tools:visibility="visible" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonExplorePlans"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="12dp"
+            android:elevation="8dp"
+            android:text="@string/explore_plans_tab"
+            android:textColor="@color/plango_primary"
+            android:textSize="13sp"
+            app:backgroundTint="@color/white"
+            app:strokeColor="@color/plango_primary" />
+
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/progressEvents"
             android:layout_width="wrap_content"

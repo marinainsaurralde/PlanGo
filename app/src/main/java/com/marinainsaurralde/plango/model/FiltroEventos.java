@@ -33,22 +33,24 @@ public final class FiltroEventos {
         private final Periodo periodo;
         private final boolean soloGratuitos;
         private final String distrito;
-        private final CategoriaCultural categoria;
+        private final PlanFilterSelection planSelection;
 
         public Criterios(Periodo periodo, boolean soloGratuitos, String distrito) {
-            this(periodo, soloGratuitos, distrito, null);
+            this(periodo, soloGratuitos, distrito, PlanFilterSelection.todosLosTipos());
         }
 
         public Criterios(Periodo periodo, boolean soloGratuitos, String distrito,
-                         CategoriaCultural categoria) {
-            this.periodo = periodo == null ? Periodo.PROXIMOS_7_DIAS : periodo;
+                         PlanFilterSelection planSelection) {
+            this.periodo = periodo == null ? Periodo.HOY : periodo;
             this.soloGratuitos = soloGratuitos;
             this.distrito = normalize(distrito);
-            this.categoria = categoria;
+            this.planSelection = planSelection == null
+                    ? PlanFilterSelection.culturaPorDefecto() : planSelection;
         }
 
         public static Criterios porDefecto() {
-            return new Criterios(Periodo.PROXIMOS_7_DIAS, false, null);
+            return new Criterios(Periodo.HOY, false, null,
+                    PlanFilterSelection.culturaPorDefecto());
         }
 
         public Periodo getPeriodo() {
@@ -63,7 +65,8 @@ public final class FiltroEventos {
             return distrito;
         }
 
-        public CategoriaCultural getCategoria() { return categoria; }
+        public PlanFilterSelection getPlanSelection() { return planSelection; }
+
     }
 
     private FiltroEventos() {
@@ -85,17 +88,14 @@ public final class FiltroEventos {
         DateRange range = dateRange(safeCriteria.getPeriodo(), hoyMadrid);
         List<T> resultado = new ArrayList<>();
         for (T plan : eventos) {
+            if (!matchesPlanSelection(plan, safeCriteria.getPlanSelection())) {
+                continue;
+            }
             if (safeCriteria.isSoloGratuitos() && plan.getPriceStatus() != PriceStatus.GRATIS) {
                 continue;
             }
             if (safeCriteria.getDistrito() != null
                     && !safeCriteria.getDistrito().equals(normalize(plan.getDistrito()))) {
-                continue;
-            }
-            if (safeCriteria.getCategoria() != null
-                    && (!(plan instanceof Evento)
-                    || !plan.getPlanTypes().contains(PlanType.CULTURA)
-                    || CategoriaCultural.clasificar((Evento) plan) != safeCriteria.getCategoria())) {
                 continue;
             }
             if (range != null && plan.getTemporalKind() != TemporalKind.LUGAR_PERMANENTE
@@ -129,6 +129,28 @@ public final class FiltroEventos {
             }
         }
         return new ArrayList<>(categories);
+    }
+
+    public static String culturalCategoryKey(CategoriaCultural category) {
+        return category == null ? null : "cultura:" + category.name();
+    }
+
+    private static boolean matchesPlanSelection(Plan plan, PlanFilterSelection selection) {
+        if (plan == null || selection == null || selection.getSelectedTypes().isEmpty()) return false;
+        for (PlanType type : selection.getSelectedTypes()) {
+            if (!plan.getPlanTypes().contains(type)) continue;
+            if (!selection.hasCategoryRestriction(type)) return true;
+            Set<String> selectedKeys = selection.getSelectedCategoryKeys(type);
+            if (type == PlanType.CULTURA && plan instanceof Evento) {
+                if (selectedKeys.contains(culturalCategoryKey(
+                        CategoriaCultural.clasificar((Evento) plan)))) return true;
+            } else {
+                for (String key : plan.getCategoryKeys()) {
+                    if (selectedKeys.contains(key)) return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static DateRange dateRange(Periodo periodo, LocalDate today) {
