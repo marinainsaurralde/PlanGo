@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.marinainsaurralde.plango.data.FavoritosRepository;
+import com.marinainsaurralde.plango.data.MisPlanesSorter;
 import com.marinainsaurralde.plango.model.Plan;
 import com.marinainsaurralde.plango.ui.EventoAdapter;
 
@@ -81,7 +82,7 @@ public class MisPlanesActivity extends AppCompatActivity {
             stateText.setText(R.string.favorites_load_error);
             return;
         }
-        List<Plan> favorites = repository.getFavoritos();
+        List<Plan> favorites = MisPlanesSorter.ordenar(repository.getFavoritos());
         adapter.setEventos(favorites);
         adapter.setFavoriteState(repository.getFavoriteIds(), repository.getPendingIds());
         boolean empty = favorites.isEmpty();
