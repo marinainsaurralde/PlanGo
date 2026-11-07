@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="settings_plan_type_entries">
+        <item>Cultura</item>
+        <item>Deportes</item>
+        <item>Naturaleza</item>
+        <item>Turismo</item>
+    </string-array>
+    <string-array name="settings_plan_type_values">
+        <item>CULTURA</item>
+        <item>DEPORTE</item>
+        <item>NATURALEZA</item>
+        <item>TURISMO</item>
+    </string-array>
+    <string-array name="settings_default_plan_types">
+        <item>CULTURA</item>
+    </string-array>
+    <string-array name="settings_date_entries">
+        <item>Hoy</item>
+        <item>Fin de semana</item>
+        <item>Próximos 7 días</item>
+        <item>Todas las fechas</item>
+    </string-array>
+    <string-array name="settings_date_values">
+        <item>HOY</item>
+        <item>FIN_DE_SEMANA</item>
+        <item>PROXIMOS_7_DIAS</item>
+        <item>TODOS</item>
+    </string-array>
+    <string-array name="settings_view_entries">
+        <item>Mapa</item>
+        <item>Listado</item>
+    </string-array>
+    <string-array name="settings_view_values">
+        <item>MAP</item>
+        <item>LIST</item>
+    </string-array>
+</resources>

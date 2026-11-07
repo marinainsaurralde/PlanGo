@@ -37,6 +37,16 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/textGreeting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="@string/greeting_generic"
+                android:textColor="@color/plango_text"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
                 android:id="@+id/textAuthenticationStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -50,11 +60,11 @@
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonSignOut"
+            android:id="@+id/buttonSettings"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/sign_out"
+            android:text="@string/settings_button"
             android:textColor="@color/plango_primary"
             android:visibility="gone"
             tools:visibility="visible" />

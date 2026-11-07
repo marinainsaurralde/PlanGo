@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="@string/settings_profile_category">
+        <EditTextPreference
+            android:key="display_name"
+            android:title="@string/settings_display_name"
+            android:dialogTitle="@string/settings_display_name_dialog"
+            app:useSimpleSummaryProvider="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/settings_exploration_category">
+        <MultiSelectListPreference
+            android:key="preferred_plan_types"
+            android:title="@string/settings_preferred_types"
+            android:entries="@array/settings_plan_type_entries"
+            android:entryValues="@array/settings_plan_type_values"
+            android:defaultValue="@array/settings_default_plan_types" />
+
+        <ListPreference
+            android:key="default_date_period"
+            android:title="@string/settings_default_date"
+            android:entries="@array/settings_date_entries"
+            android:entryValues="@array/settings_date_values"
+            android:defaultValue="HOY"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            android:key="initial_view"
+            android:title="@string/settings_initial_view"
+            android:entries="@array/settings_view_entries"
+            android:entryValues="@array/settings_view_values"
+            android:defaultValue="MAP"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/settings_reset_category">
+        <Preference
+            android:key="reset_settings"
+            android:title="@string/settings_reset_action"
+            android:summary="@string/settings_reset_summary" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/settings_account_category">
+        <Preference
+            android:key="sign_out"
+            android:title="@string/sign_out"
+            android:summary="@string/settings_sign_out_summary" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

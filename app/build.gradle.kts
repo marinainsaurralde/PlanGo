@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.recyclerview)
     implementation(libs.play.services.maps)
+    implementation(libs.preference)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)

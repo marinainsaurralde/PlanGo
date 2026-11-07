@@ -15,6 +15,7 @@ public final class EventosStore {
     private FiltroEventos.Criterios criterios = FiltroEventos.Criterios.porDefecto();
     private boolean loaded;
     private long lastUpdatedMillis;
+    private String sessionUid;
 
     private EventosStore() {
     }
@@ -45,5 +46,19 @@ public final class EventosStore {
 
     public synchronized void setCriterios(FiltroEventos.Criterios nuevosCriterios) {
         criterios = nuevosCriterios;
+    }
+
+    /** Aplica preferencias solo al comenzar una sesión, nunca al recrear pantallas. */
+    public synchronized boolean initializeSession(String uid,
+                                                  FiltroEventos.Criterios initialCriteria) {
+        if (uid == null || uid.equals(sessionUid)) return false;
+        sessionUid = uid;
+        criterios = initialCriteria == null ? FiltroEventos.Criterios.porDefecto() : initialCriteria;
+        return true;
+    }
+
+    public synchronized void endSession() {
+        sessionUid = null;
+        criterios = FiltroEventos.Criterios.porDefecto();
     }
 }

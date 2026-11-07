@@ -43,6 +43,7 @@ import com.marinainsaurralde.plango.data.EventosStore;
 import com.marinainsaurralde.plango.data.ConsultasRepository;
 import com.marinainsaurralde.plango.data.ConsultaEstadisticas;
 import com.marinainsaurralde.plango.data.AgrupadorEventos;
+import com.marinainsaurralde.plango.data.AppPreferences;
 import com.marinainsaurralde.plango.data.FavoritosRepository;
 import com.marinainsaurralde.plango.model.Evento;
 import com.marinainsaurralde.plango.model.Plan;
@@ -82,6 +83,8 @@ public class MainActivity extends AppCompatActivity {
     private FiltrosViewBinder filtrosViewBinder;
     private List<String> availableDistricts = Collections.emptyList();
     private boolean downloadInProgress;
+    private boolean pendingInitialList;
+    private boolean initialViewHandled;
     private final MarkerIconFactory markerIconFactory = new MarkerIconFactory();
 
     private final ActivityResultLauncher<Intent> signInLauncher =
@@ -101,7 +104,6 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        findViewById(R.id.buttonSignOut).setOnClickListener(view -> signOut());
         findViewById(R.id.buttonViewList).setOnClickListener(
                 view -> startActivity(new Intent(this, EventosActivity.class))
         );
@@ -109,6 +111,8 @@ public class MainActivity extends AppCompatActivity {
                 view -> startActivity(new Intent(this, MisPlanesActivity.class))
         );
         findViewById(R.id.buttonHistory).setOnClickListener(view -> startActivity(new Intent(this, HistorialActivity.class)));
+        findViewById(R.id.buttonSettings).setOnClickListener(
+                view -> startActivity(new Intent(this, SettingsActivity.class)));
         findViewById(R.id.buttonRefreshEvents).setOnClickListener(view -> loadMapEvents(true));
         findViewById(R.id.buttonRetryMapEvents).setOnClickListener(view -> loadMapEvents(false));
         setupFilters();
@@ -169,36 +173,30 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void signOut() {
-        MaterialButton signOutButton = findViewById(R.id.buttonSignOut);
-        signOutButton.setEnabled(false);
-
-        AuthUI.getInstance()
-                .signOut(this)
-                .addOnCompleteListener(task -> {
-                    signOutButton.setEnabled(true);
-                    if (task.isSuccessful()) {
-                        showSignedOutUi();
-                        startSignIn();
-                    } else {
-                        showAuthenticationMessage(R.string.sign_out_error, false);
-                    }
-                });
-    }
-
     private void showSignedInUi(FirebaseUser user) {
+        AppPreferences preferences = new AppPreferences(this, user.getUid());
+        boolean newSession = eventosStore.initializeSession(
+                user.getUid(), preferences.initialCriteria());
+        if (newSession) {
+            pendingInitialList = preferences.startsInList();
+            initialViewHandled = false;
+            if (filtrosViewBinder != null) filtrosViewBinder.syncSelection();
+            updateDistrictButton();
+        }
+        updateGreeting(preferences.getDisplayName());
         TextView status = findViewById(R.id.textAuthenticationStatus);
         String email = user.getEmail();
         status.setText(email == null
                 ? getString(R.string.authenticated_user)
                 : getString(R.string.authenticated_as, email));
-        findViewById(R.id.buttonSignOut).setVisibility(View.VISIBLE);
+        findViewById(R.id.buttonSettings).setVisibility(View.VISIBLE);
         findViewById(R.id.authenticatedContent).setVisibility(View.VISIBLE);
         if (eventosStore.isLoaded()) {
             eventsRequested = true;
             populateDistricts();
             applyFilters();
             updateLastRefreshText();
+            openInitialListIfNeeded();
         } else if (!eventsRequested) {
             loadMapEvents(false);
         }
@@ -207,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
     private void showSignedOutUi() {
         ((TextView) findViewById(R.id.textAuthenticationStatus))
                 .setText(R.string.authentication_required);
-        findViewById(R.id.buttonSignOut).setVisibility(View.GONE);
+        findViewById(R.id.buttonSettings).setVisibility(View.GONE);
         findViewById(R.id.authenticatedContent).setVisibility(View.GONE);
     }
 
@@ -264,6 +262,7 @@ public class MainActivity extends AppCompatActivity {
             }
             if (isFinishing() || isDestroyed()) return;
             populateDistricts(); applyFilters(); finishDownload(); updateLastRefreshText();
+            openInitialListIfNeeded();
             if (!result.isComplete()) {
                 Snackbar.make(findViewById(R.id.main), R.string.events_partial_results,
                         Snackbar.LENGTH_LONG).show();
@@ -272,6 +271,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void finishDownload(){downloadInProgress=false;findViewById(R.id.buttonRefreshEvents).setEnabled(true);}
+
+    private void updateGreeting(String displayName) {
+        TextView greeting = findViewById(R.id.textGreeting);
+        greeting.setText(displayName == null || displayName.trim().isEmpty()
+                ? getString(R.string.greeting_generic)
+                : getString(R.string.greeting_named, displayName.trim()));
+    }
+
+    private void openInitialListIfNeeded() {
+        if (initialViewHandled || !pendingInitialList || !eventosStore.isLoaded()) return;
+        initialViewHandled = true;
+        startActivity(new Intent(this, EventosActivity.class));
+    }
     private void updateLastRefreshText(){long value=eventosStore.getLastUpdatedMillis();TextView view=findViewById(R.id.textLastRefresh);if(value==0){view.setText(R.string.never_updated);return;}DateTimeFormatter f=DateTimeFormatter.ofPattern("d MMM, HH:mm",new Locale("es","ES"));view.setText(getString(R.string.last_updated,Instant.ofEpochMilli(value).atZone(ZoneId.of("Europe/Madrid")).format(f)));}
 
     private void setupFilters() {
@@ -486,6 +498,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) updateGreeting(new AppPreferences(this, user.getUid()).getDisplayName());
         if (filtrosViewBinder != null) {
             filtrosViewBinder.syncSelection();
             updateDistrictButton();

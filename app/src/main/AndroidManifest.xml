@@ -20,6 +20,8 @@
         <activity
             android:name=".DetalleConsultaActivity" android:exported="false" />
         <activity
+            android:name=".SettingsActivity" android:exported="false" />
+        <activity
             android:name=".HistorialActivity" android:exported="false" />
         <activity
             android:name=".MisPlanesActivity"
