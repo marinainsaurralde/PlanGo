@@ -50,7 +50,8 @@ public class EventosActivity extends AppCompatActivity {
             return insets;
         });
 
-        findViewById(R.id.buttonBackToMap).setOnClickListener(view -> finish());
+        findViewById(R.id.buttonBackToMap).setOnClickListener(view ->
+                getOnBackPressedDispatcher().onBackPressed());
         findViewById(R.id.buttonRetryEvents).setOnClickListener(view -> finish());
         findViewById(R.id.buttonExplorePlans).setOnClickListener(view ->
                 new ExplorarPlanesBottomSheet(this, eventosStore, this::showEvents).show());

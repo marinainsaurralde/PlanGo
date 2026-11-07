@@ -87,7 +87,8 @@ public class MisPlanesActivity extends AppCompatActivity {
             view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
             return insets;
         });
-        findViewById(R.id.buttonBackFromPlans).setOnClickListener(view -> finish());
+        findViewById(R.id.buttonBackFromPlans).setOnClickListener(view ->
+                getOnBackPressedDispatcher().onBackPressed());
 
         RecyclerView list = findViewById(R.id.recyclerMyPlans);
         list.setLayoutManager(new LinearLayoutManager(this));

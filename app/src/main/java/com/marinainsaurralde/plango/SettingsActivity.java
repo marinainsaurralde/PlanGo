@@ -25,7 +25,8 @@ public final class SettingsActivity extends AppCompatActivity {
             view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
             return insets;
         });
-        findViewById(R.id.buttonBackSettings).setOnClickListener(view -> finish());
+        findViewById(R.id.buttonBackSettings).setOnClickListener(view ->
+                getOnBackPressedDispatcher().onBackPressed());
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.settingsContainer, new SettingsFragment())

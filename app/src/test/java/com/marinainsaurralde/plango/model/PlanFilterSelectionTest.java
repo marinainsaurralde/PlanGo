@@ -151,6 +151,17 @@ public final class PlanFilterSelectionTest {
                 draft.toSelection().getSelectedCategoryKeys(PlanType.DEPORTE));
     }
 
+    @Test public void removingLastSpecificCategoryRestoresAllCategories() {
+        PlanFilterDraft draft = new PlanFilterDraft(PlanFilterSelection.culturaPorDefecto());
+        String music = FiltroEventos.culturalCategoryKey(CategoriaCultural.MUSICA);
+        draft.setSpecificCategorySelected(PlanType.CULTURA, music, true);
+        draft.setSpecificCategorySelected(PlanType.CULTURA, music, false);
+
+        assertTrue(draft.isTypeSelected(PlanType.CULTURA));
+        assertTrue(draft.includesAllCategories(PlanType.CULTURA));
+        assertFalse(draft.toSelection().hasCategoryRestriction(PlanType.CULTURA));
+    }
+
     private List<Plan> filter(List<Plan> plans, PlanFilterSelection selection,
                               boolean freeOnly, String district) {
         return FiltroEventos.aplicar(plans, new FiltroEventos.Criterios(

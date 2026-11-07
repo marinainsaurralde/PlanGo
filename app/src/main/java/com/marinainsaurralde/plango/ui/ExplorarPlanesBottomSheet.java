@@ -2,6 +2,10 @@ package com.marinainsaurralde.plango.ui;
 
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.content.res.Configuration;
+import android.graphics.Rect;
+import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -10,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.checkbox.MaterialCheckBox;
@@ -54,8 +59,28 @@ public final class ExplorarPlanesBottomSheet {
         openType = firstSelectedType();
         render();
         content.findViewById(R.id.buttonApplyPlanFilters).setOnClickListener(view -> apply());
-        content.findViewById(R.id.buttonClearPlanFilters).setOnClickListener(view -> toggleAll());
+        content.findViewById(R.id.buttonClearPlanFilters)
+                .setOnClickListener(view -> toggleOpenTypeCategories());
         dialog.show();
+        configureLandscapeHeight();
+    }
+
+    private void configureLandscapeHeight() {
+        if (activity.getResources().getConfiguration().orientation
+                != Configuration.ORIENTATION_LANDSCAPE) return;
+        FrameLayout sheet = dialog.findViewById(
+                com.google.android.material.R.id.design_bottom_sheet);
+        if (sheet == null) return;
+        Rect visibleFrame = new Rect();
+        activity.getWindow().getDecorView().getWindowVisibleDisplayFrame(visibleFrame);
+        int availableHeight = visibleFrame.height() - dp(12);
+        ViewGroup.LayoutParams params = sheet.getLayoutParams();
+        params.height = Math.max(dp(240), availableHeight);
+        sheet.setLayoutParams(params);
+        BottomSheetBehavior<FrameLayout> behavior = BottomSheetBehavior.from(sheet);
+        behavior.setMaxHeight(availableHeight);
+        behavior.setSkipCollapsed(true);
+        behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
     }
 
     private void render() {
@@ -73,8 +98,13 @@ public final class ExplorarPlanesBottomSheet {
         LinearLayout sections = content.findViewById(R.id.layoutPlanCategories);
         sections.removeAllViews();
         MaterialButton toggleAll = content.findViewById(R.id.buttonClearPlanFilters);
-        toggleAll.setText(hasSelectedTypes()
-                ? R.string.clear_plan_filters : R.string.select_all_plan_filters);
+        LinkedHashMap<String, String> openOptions = openType == null ? null : options.get(openType);
+        boolean hasCategories = openOptions != null && !openOptions.isEmpty();
+        toggleAll.setVisibility(hasCategories ? View.VISIBLE : View.GONE);
+        if (hasCategories) {
+            toggleAll.setText(areAllOpenCategoriesSelected(openOptions)
+                    ? R.string.clear_plan_filters : R.string.select_all_plan_filters);
+        }
         if (openType == PlanType.NATURALEZA) {
             addTypeSectionHeader(sections, openType);
             addNatureMessage(sections);
@@ -175,21 +205,31 @@ public final class ExplorarPlanesBottomSheet {
         dialog.dismiss();
     }
 
-    private void toggleAll() {
-        if (hasSelectedTypes()) {
-            draft.clearAll();
-            openType = null;
+    private void toggleOpenTypeCategories() {
+        if (openType == null) return;
+        LinkedHashMap<String, String> typeOptions = options.get(openType);
+        if (typeOptions == null || typeOptions.isEmpty()) return;
+        boolean selectAll = !areAllOpenCategoriesSelected(typeOptions);
+        if (selectAll && !draft.isTypeSelected(openType)) {
+            draft.setTypeSelected(openType, true);
+        }
+        if (selectAll) {
+            draft.setAllCategories(openType, false);
+            for (String key : typeOptions.keySet()) {
+                draft.setSpecificCategorySelected(openType, key, true);
+            }
         } else {
-            for (PlanType type : PlanType.values()) draft.setTypeSelected(type, true);
+            draft.setAllCategories(openType, true);
         }
         render();
     }
 
-    private boolean hasSelectedTypes() {
-        for (PlanType type : PlanType.values()) {
-            if (draft.isTypeSelected(type)) return true;
+    private boolean areAllOpenCategoriesSelected(Map<String, String> typeOptions) {
+        if (openType == null || typeOptions.isEmpty()) return false;
+        for (String key : typeOptions.keySet()) {
+            if (!draft.isSpecificCategorySelected(openType, key)) return false;
         }
-        return false;
+        return true;
     }
 
     private void addNatureMessage(LinearLayout parent) {

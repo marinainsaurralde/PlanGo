@@ -43,7 +43,8 @@ public class DetalleEventoActivity extends AppCompatActivity {
             return insets;
         });
 
-        findViewById(R.id.buttonBack).setOnClickListener(view -> finish());
+        findViewById(R.id.buttonBack).setOnClickListener(view ->
+                getOnBackPressedDispatcher().onBackPressed());
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             evento = getIntent().getSerializableExtra(EXTRA_EVENTO, Plan.class);

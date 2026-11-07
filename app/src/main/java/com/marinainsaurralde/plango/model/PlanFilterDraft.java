@@ -53,8 +53,14 @@ public final class PlanFilterDraft {
     public void setSpecificCategorySelected(PlanType type, String key, boolean selected) {
         Set<String> values = restrictions.get(type);
         if (values == null) values = new LinkedHashSet<>();
-        if (selected) values.add(key); else values.remove(key);
-        restrictions.put(type, values);
+        if (selected) {
+            values.add(key);
+            restrictions.put(type, values);
+        } else {
+            values.remove(key);
+            if (values.isEmpty()) restrictions.remove(type);
+            else restrictions.put(type, values);
+        }
     }
 
     public void clearAll() { replaceWith(PlanFilterSelection.vacia()); }
