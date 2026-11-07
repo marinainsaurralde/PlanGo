@@ -1,0 +1,320 @@
+PLAN&GO
+Documentación de entrega
+Front-end para Móviles (FEM)
+Máster en Ingeniería Web — Universidad Politécnica de Madrid
+
+
+1. PRESENTACIÓN DEL PROYECTO
+
+Plan&Go es una aplicación Android para descubrir y organizar planes en la ciudad de Madrid. Reúne información pública municipal de cultura, deporte, naturaleza y turismo y la presenta en una interfaz común con mapa, listado y detalle.
+
+La aplicación permite consultar actividades y lugares, aplicar filtros, guardar planes asociados a una cuenta, revisar estadísticas de las consultas realizadas y programar recordatorios locales opcionales para eventos con fecha. Su finalidad es facilitar que una persona encuentre propuestas de ocio sin tener que consultar por separado varios conjuntos de datos municipales.
+
+Identificador de la aplicación Android:
+com.marinainsaurralde.plango
+
+
+2. TECNOLOGÍAS UTILIZADAS
+
+- Android nativo con interfaz desarrollada en XML.
+- Java como lenguaje del código de la aplicación, con compatibilidad de fuente Java 11.
+- Android Gradle Plugin 9.4.1 y Gradle Wrapper 9.6.0.
+- compileSdk 37, targetSdk 37 y minSdk 26.
+- Material Components 1.14.0 y tema Material 3.
+- AndroidX AppCompat, Activity, ConstraintLayout, RecyclerView y Preference.
+- Firebase Authentication para identificar a los usuarios.
+- FirebaseUI Authentication 9.1.1 para el flujo de acceso, registro por correo electrónico y contraseña, y recuperación de contraseña.
+- Cloud Firestore para favoritos e historial de consultas.
+- Firebase BoM 33.9.0 y complemento Google Services 4.5.0.
+- Google Maps SDK for Android 20.1.0 para el mapa y los marcadores.
+- HttpURLConnection y ExecutorService para las consultas de red fuera del hilo principal.
+- org.json para procesar las fuentes JSON y las clases DOM de Java para procesar XML.
+- SharedPreferences y AndroidX Preference para ajustes y recordatorios locales.
+- AlarmManager, BroadcastReceiver y NotificationCompat para recordatorios locales aproximados.
+- JUnit 4 para pruebas unitarias y AndroidX Test/Espresso para pruebas instrumentadas.
+
+No se utiliza Jetpack Compose ni se ha introducido código Kotlin propio en la aplicación.
+
+
+3. FUENTES DE INFORMACIÓN
+
+Plan&Go consume cuatro fuentes oficiales del portal de Datos Abiertos del Ayuntamiento de Madrid:
+
+3.1. Agenda cultural y general
+
+- Conjunto: Agenda de actividades y eventos.
+- Recurso: 300107-2-agenda-actividades-eventos-csv.
+- URL: https://datos.madrid.es/id/api/3/action/datastore_search?resource_id=300107-2-agenda-actividades-eventos-csv
+- Acceso: API datastore_search del portal datos.madrid.es.
+- Formato recibido por la aplicación: JSON.
+- Integración: MadridApiClient descarga el recurso mediante paginación con limit y offset y transforma los registros en objetos Evento.
+
+3.2. Agenda deportiva
+
+- Conjunto: Agenda de actividades deportivas.
+- Recurso: 212504-2-agenda-actividades-deportes-json.json.
+- URL: https://datos.madrid.es/dataset/212504-0-agenda-actividades-deportes/resource/212504-2-agenda-actividades-deportes-json/download/212504-2-agenda-actividades-deportes-json.json
+- Formato: JSON.
+- Integración: DeportesApiClient descarga y clasifica los eventos deportivos. Los eventos que comparten identificador municipal con la agenda general se combinan para evitar duplicados.
+
+3.3. Parques y jardines
+
+- Conjunto: Parques y jardines de Madrid.
+- Recurso: 200761-5-parques-jardines-json.json.
+- URL: https://datos.madrid.es/dataset/200761-0-parques-jardines/resource/200761-5-parques-jardines-json/download/200761-5-parques-jardines-json.json
+- Formato: JSON.
+- Integración: ParquesApiClient transforma los registros en lugares permanentes de tipo NATURALEZA.
+
+3.4. Puntos de interés turístico
+
+- Conjunto: Puntos de interés turístico de Madrid.
+- Recurso: 300030-1-puntos-interes-turistico.xml.
+- URL: https://datos.madrid.es/dataset/300030-0-puntos-interes-turistico/resource/300030-1-puntos-interes-turistico/download/300030-1-puntos-interes-turistico.xml
+- Formato: XML.
+- Integración: TurismoApiClient utiliza un parser DOM configurado de forma segura y transforma los registros en lugares permanentes de tipo TURISMO.
+
+EventosMultifuenteLoader coordina las cuatro descargas. EventosMerger y PlanesMerger combinan resultados y conservan una identidad estable. Las equivalencias verificadas entre determinados parques y puntos turísticos evitan duplicar el mismo lugar y permiten que un plan pertenezca a más de un tipo. Los campos vacíos de una fuente no sustituyen datos válidos procedentes de otra.
+
+Las descargas se mantienen en memoria mediante EventosStore. Cambiar filtros, alternar entre mapa y listado o abrir un detalle no genera nuevas peticiones HTTP. Si una actualización es parcial y ya existe una carga anterior, se conservan los datos completos previos; durante una primera carga sí pueden mostrarse los resultados parciales disponibles.
+
+
+4. FUNCIONALIDADES IMPLEMENTADAS
+
+4.1. Autenticación
+
+- Registro e inicio de sesión con correo electrónico y contraseña mediante FirebaseUI.
+- Recuperación de contraseña proporcionada por FirebaseUI.
+- Persistencia de la sesión mediante Firebase Authentication.
+- Cierre de sesión desde Ajustes.
+- Separación de favoritos, historial, preferencias y recordatorios por UID.
+
+4.2. Exploración de planes
+
+- Cuatro tipos de planes: CULTURA, DEPORTE, NATURALEZA y TURISMO.
+- Panel inferior «Explorar planes» con selección múltiple de tipos.
+- Categorías culturales, deportivas y turísticas basadas en los datos y clasificadores implementados.
+- Naturaleza se trata como un tipo completo porque la fuente utilizada no aporta una clasificación interna suficientemente fiable para la interfaz.
+- Los planes que pertenecen a varios tipos aparecen una sola vez.
+
+4.3. Filtros
+
+- Fecha: Hoy, Fin de semana, Próximos 7 días o Todas las fechas.
+- Solo planes gratuitos cuando la fuente informa expresamente de la gratuidad.
+- Distrito, utilizando los distritos disponibles en los datos descargados.
+- Tipo de plan y categorías del panel «Explorar planes».
+- Los filtros superiores se combinan mediante AND; entre tipos y entre categorías de un mismo tipo se aplica OR.
+- Las fechas se interpretan con la zona horaria Europe/Madrid. Los eventos que empezaron antes pero siguen vigentes pueden incluirse en el período seleccionado.
+
+4.4. Mapa, listado y detalle
+
+- Mapa interactivo centrado inicialmente en Madrid.
+- Marcadores personalizados por tipo de plan.
+- Agrupación de planes que comparten coordenadas y panel inferior para consultar sus tarjetas.
+- Ventanas informativas y navegación al detalle del plan.
+- Listado RecyclerView sincronizado con los mismos filtros del mapa.
+- Los planes sin coordenadas válidas pueden aparecer en el listado, pero no generan marcadores.
+- Presentación de fechas únicas, rangos de fechas y estado «En curso» cuando corresponde.
+- Diseños adaptados para orientación vertical y horizontal.
+
+4.5. Mis planes y favoritos
+
+- Guardado y eliminación de favoritos mediante corazones en listado, detalle y grupos del mapa.
+- Sincronización del estado de favorito entre pantallas.
+- Pantalla «Mis planes» con acceso al detalle y eliminación de favoritos.
+- Conservación de eventos finalizados hasta que el usuario los elimine.
+- Orden local por relevancia temporal: en curso, próximos, finalizados, sin fecha válida y lugares permanentes.
+
+4.6. Historial y estadísticas
+
+- Registro en Firestore de las cargas automáticas completas y de las actualizaciones manuales completas.
+- Botón para actualizar los datos.
+- Una actualización de las cuatro fuentes genera una única entrada lógica de historial.
+- Las descargas parciales no se registran como consultas completas.
+- Pantalla de historial ordenada por fecha.
+- Detalle con total de planes, estado de precio, distribución por distrito, distribución por tipo y una muestra de resultados.
+
+4.7. Ajustes locales
+
+- Nombre para mostrar en el saludo de la pantalla principal.
+- Tipos de planes preferidos para iniciar una nueva sesión de uso.
+- Período de fecha predeterminado.
+- Vista inicial: mapa o listado.
+- Restablecimiento de valores predeterminados conservando el nombre para mostrar.
+- Preferencias independientes para cada UID en el mismo dispositivo.
+
+4.8. Recordatorios locales
+
+- Una campana en las tarjetas de «Mis planes» para eventos con fecha de inicio válida.
+- Un único recordatorio por evento y usuario.
+- Opciones: el día anterior a las 18:00 o el mismo día a las 09:00, según Europe/Madrid.
+- Solo se muestran opciones cuya hora de aviso todavía es futura.
+- No se ofrecen recordatorios para lugares permanentes ni para eventos sin fecha válida.
+- Alarmas inexactas mediante AlarmManager, sin solicitar permiso para alarmas exactas.
+- Solicitud de POST_NOTIFICATIONS en Android 13 o posterior al intentar activar un recordatorio.
+- Cancelación al eliminar el favorito o cerrar la sesión y restauración de alarmas futuras tras reiniciar, únicamente para el usuario autenticado.
+- Comprobación del UID antes de mostrar una notificación y un único reintento limitado si Firebase todavía no ha recuperado la sesión local.
+
+
+5. PERSISTENCIA
+
+5.1. Cloud Firestore
+
+Los datos se separan por el UID de Firebase Authentication:
+
+- usuarios/{uid}/favoritos/{idEvento}
+  Guarda una copia de los datos necesarios para mostrar el plan sin volver a consultar la API, incluidos los metadatos disponibles, sus tipos, categorías y una marca temporal de guardado.
+
+- usuarios/{uid}/consultas/{idDescarga}
+  Guarda la fecha de consulta, origen automático o manual, totales por estado de precio, estadísticas por distrito y tipo, y una muestra reducida de planes.
+
+Las credenciales, contraseñas y tokens no se almacenan en estos documentos. Las reglas de Firestore deben restringir cada documento al usuario autenticado correspondiente.
+
+5.2. Almacenamiento local
+
+- SharedPreferences por UID para nombre visible, tipos preferidos, fecha predeterminada y vista inicial.
+- SharedPreferences por UID para los recordatorios locales pendientes y un registro interno de usuarios con recordatorios.
+- AlarmManager para programar los avisos locales.
+- EventosStore mantiene en memoria la descarga multifuente y los filtros temporales de la sesión.
+- Firebase Authentication gestiona localmente la sesión autenticada mediante su propio SDK.
+
+Los datos descargados de las fuentes municipales no se guardan en una base de datos local permanente.
+
+
+6. INSTALACIÓN Y CONFIGURACIÓN
+
+6.1. Requisitos
+
+- Android Studio compatible con Android Gradle Plugin 9.4.1 y Gradle 9.6.0.
+- SDK de Android 37 instalado.
+- JDK compatible configurado en Android Studio; el proyecto compila el código fuente con Java 11.
+- Dispositivo o emulador con Android 8.0 (API 26) o posterior.
+- Proyecto de Firebase y proyecto de Google Cloud configurados por la persona que compila.
+- Conexión a Internet para descargar dependencias, autenticar usuarios y consultar los servicios externos.
+
+6.2. Apertura del proyecto
+
+1. Abrir Android Studio.
+2. Seleccionar «Open» y elegir la carpeta raíz del proyecto.
+3. Esperar a que Gradle sincronice el proyecto y descargue las dependencias.
+4. Comprobar que Android Studio utiliza el Gradle Wrapper incluido.
+
+6.3. Configuración de Firebase
+
+1. Crear o utilizar un proyecto en Firebase Console.
+2. Registrar una aplicación Android con el paquete com.marinainsaurralde.plango.
+3. Descargar el archivo google-services.json de esa aplicación.
+4. Copiarlo como app/google-services.json. Este archivo es local, está ignorado por Git y no debe publicarse.
+5. En Firebase Authentication, habilitar el proveedor Correo electrónico/Contraseña.
+6. Crear una base de datos Cloud Firestore.
+7. Publicar reglas que permitan a cada usuario autenticado acceder únicamente a sus subcolecciones favoritos y consultas bajo usuarios/{uid}.
+
+El proyecto no publica ni modifica automáticamente las reglas de Firestore.
+
+6.4. Configuración de Google Maps
+
+1. Habilitar Maps SDK for Android en Google Cloud.
+2. Crear una clave de API.
+3. Restringir la clave a Maps SDK for Android y a la combinación del paquete com.marinainsaurralde.plango con el SHA-1 del certificado utilizado.
+4. Añadir la siguiente propiedad a local.properties, sustituyendo el valor de ejemplo por la clave propia:
+
+   MAPS_API_KEY=CLAVE_PROPIA_NO_VERSIONADA
+
+La compilación lee esta propiedad y la incorpora al manifiesto mediante el placeholder MAPS_API_KEY. No se debe escribir la clave directamente en AndroidManifest.xml ni en archivos versionados.
+
+6.5. Compilación y ejecución
+
+Desde la terminal de la raíz del proyecto en Windows:
+
+   .\gradlew.bat :app:assembleDebug
+   .\gradlew.bat :app:testDebugUnitTest
+
+El APK de depuración se genera bajo app/build/outputs/apk/debug/.
+
+Para ejecutar la aplicación:
+
+1. Crear o iniciar un emulador con Google APIs; durante el desarrollo se utilizó un Pixel 7 Pro API 35.
+2. Seleccionar el dispositivo en Android Studio.
+3. Ejecutar la configuración app.
+4. Registrar un usuario mediante correo electrónico y contraseña o iniciar sesión con uno existente.
+
+
+7. ESTRUCTURA PRINCIPAL DEL PROYECTO
+
+app/src/main/java/com/marinainsaurralde/plango/
+
+- MainActivity: autenticación, mapa, carga multifuente, filtros y navegación principal.
+- EventosActivity: listado filtrado de planes.
+- DetalleEventoActivity: información disponible de un plan y estado de favorito.
+- MisPlanesActivity: favoritos ordenados y gestión de recordatorios.
+- HistorialActivity y DetalleConsultaActivity: historial y estadísticas.
+- SettingsActivity y SettingsFragment: preferencias locales y cierre de sesión.
+- ReminderReceiver y BootReceiver: recepción y restauración segura de recordatorios.
+
+Paquete model:
+
+- Plan: modelo base multifuente.
+- Evento y Lugar: planes temporales y lugares permanentes.
+- PlanType, TemporalKind, PriceStatus y PlanIdentity: tipado e identidad del modelo.
+- CategoriaCultural, CategoriaDeportiva y CategoriaTuristica: clasificación de categorías.
+- FiltroEventos, PlanFilterSelection y PlanFilterDraft: reglas y estado de filtrado.
+- EventReminder: reglas temporales y representación persistente de recordatorios.
+- ConsultaHistorial, MuestraEvento y GrupoUbicacion: historial y agrupación del mapa.
+
+Paquete data:
+
+- MadridApiClient, DeportesApiClient, ParquesApiClient y TurismoApiClient: acceso y parseo de las fuentes municipales.
+- EventosMultifuenteLoader: coordinación de las cuatro fuentes.
+- EventosMerger y PlanesMerger: combinación y deduplicación.
+- EventosStore: datos y filtros compartidos en memoria.
+- FavoritosRepository, FavoritoMapper y ConsultasRepository: persistencia en Firestore.
+- ConsultaEstadisticas y MisPlanesSorter: estadísticas y orden temporal.
+- AppPreferences: preferencias locales aisladas por UID.
+- ReminderRepository y ReminderScheduler: persistencia y programación de recordatorios.
+
+Paquete ui:
+
+- EventoAdapter, ConsultaAdapter y DistritoAdapter: adaptadores RecyclerView.
+- ExplorarPlanesBottomSheet: selección de tipos y categorías.
+- FiltrosViewBinder: enlace de controles de fecha y gratuidad con EventosStore.
+- MarkerIconFactory: creación de marcadores personalizados.
+
+Recursos principales:
+
+- app/src/main/res/layout: layouts XML para actividades, tarjetas y paneles inferiores.
+- app/src/main/res/layout-land: adaptaciones para orientación horizontal.
+- app/src/main/res/xml/preferences.xml: definición de la pantalla Ajustes.
+- app/src/main/res/mipmap-* y mipmap-anydpi-v26: icono tradicional y adaptable.
+
+
+8. PRUEBAS Y VERIFICACIONES REALIZADAS
+
+La versión de entrega se ha validado mediante:
+
+- Compilación de depuración con :app:assembleDebug.
+- Ejecución de las pruebas unitarias con :app:testDebugUnitTest.
+- Comprobación de formato del diff mediante git diff --check durante el desarrollo.
+- Pruebas unitarias de filtros temporales y combinados, categorías, modelo multifuente, parseo de las fuentes, deduplicación, actualización parcial, favoritos, estadísticas, orden de Mis planes, preferencias y reglas de recordatorios.
+- Existencia de pruebas instrumentadas para controles de filtros, panel Explorar planes, interfaz de eventos y clientes municipales. Su ejecución requiere un emulador y, en los casos de red, disponibilidad de los servicios externos.
+- Verificación manual en un emulador Pixel 7 Pro API 35 de autenticación, mapa, marcadores y agrupaciones, listado, detalle, filtros, favoritos, historial, estadísticas, preferencias, configuración de recordatorios y navegación.
+- Verificación manual de las pantallas principales en orientación vertical y horizontal.
+
+La programación y gestión visual de recordatorios se ha probado en el emulador. No se afirma que Android entregue siempre una notificación a la hora indicada: las alarmas son deliberadamente inexactas y su entrega efectiva depende del sistema operativo, permisos y estado del dispositivo.
+
+
+9. LIMITACIONES CONOCIDAS
+
+- La autenticación, Firestore, Google Maps y las fuentes municipales requieren conexión a Internet.
+- La aplicación depende de la disponibilidad, tiempo de respuesta y estructura de servicios externos. Un cambio de esquema en datos.madrid.es puede requerir adaptar los parsers.
+- Si una de las fuentes falla durante la primera carga, la aplicación puede mostrar resultados parciales. Si ya existe una carga completa en memoria, una actualización parcial conserva los datos anteriores.
+- Los horarios, precios, recurrencias y fechas dependen de la calidad de los datos municipales. Plan&Go no inventa información ausente y algunos valores pueden aparecer como no disponibles.
+- Los lugares permanentes no se interpretan como eventos con una fecha u hora de celebración.
+- Los marcadores solo se muestran para planes con coordenadas válidas; el listado puede contener planes sin marcador.
+- Los datos descargados se mantienen en memoria. Tras cerrar completamente el proceso puede ser necesaria una nueva descarga.
+- Los recordatorios utilizan alarmas inexactas. Android puede retrasarlos por ahorro de batería, Doze, reinicios, restricciones del fabricante o falta de permiso POST_NOTIFICATIONS.
+- Desactivar las notificaciones de la aplicación o su canal impide mostrar los avisos.
+- La restauración después de reiniciar está vinculada al usuario de Firebase que el SDK pueda recuperar. Si no hay sesión disponible durante el arranque, los recordatorios se restauran al volver a iniciar la aplicación con esa cuenta.
+- No se solicitan permisos de ubicación y la aplicación no muestra la posición del usuario.
+- No se implementan favoritos sin autenticación ni sincronización de ajustes locales entre dispositivos.
+
+
+FIN DEL DOCUMENTO
