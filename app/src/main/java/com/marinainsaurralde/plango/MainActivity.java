@@ -254,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             List<Plan> eventos = result.getPlanes();
-            eventosStore.setEventos(eventos);
+            eventosStore.setEventosFromLoad(eventos, result.isComplete());
             if (result.isComplete()) {
                 ConsultaHistorial stats=ConsultaEstadisticas.calcular(eventos,manual?"manual":"automatica");
                 ConsultasRepository.getInstance().guardar(startUid,downloadId,stats,new ConsultasRepository.SaveCallback(){

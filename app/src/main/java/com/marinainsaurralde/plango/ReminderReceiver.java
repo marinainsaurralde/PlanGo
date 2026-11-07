@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -20,26 +22,64 @@ import com.marinainsaurralde.plango.data.ReminderRepository;
 import com.marinainsaurralde.plango.data.ReminderScheduler;
 import com.marinainsaurralde.plango.model.EventReminder;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public final class ReminderReceiver extends BroadcastReceiver {
     private static final String CHANNEL_ID = "event_reminders";
+    private static final long AUTH_RECOVERY_WAIT_MILLIS = 5_000L;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         String uid = intent.getStringExtra(ReminderScheduler.EXTRA_UID);
         String eventId = intent.getStringExtra(ReminderScheduler.EXTRA_EVENT_ID);
         long expectedTrigger = intent.getLongExtra(ReminderScheduler.EXTRA_TRIGGER, -1L);
+        int retryCount = intent.getIntExtra(ReminderScheduler.EXTRA_RETRY_COUNT, 0);
         if (uid == null || eventId == null) return;
         ReminderRepository repository = new ReminderRepository(context, uid);
         EventReminder reminder = repository.get(eventId);
         if (reminder == null || reminder.getTriggerAtMillis() != expectedTrigger) return;
-        repository.remove(eventId);
 
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null || !uid.equals(user.getUid())) return;
+        PendingResult pendingResult = goAsync();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        Handler handler = new Handler(Looper.getMainLooper());
+        AtomicBoolean completed = new AtomicBoolean(false);
+        FirebaseAuth.AuthStateListener[] listenerHolder = new FirebaseAuth.AuthStateListener[1];
+        Runnable timeout = () -> {
+            if (!completed.compareAndSet(false, true)) return;
+            auth.removeAuthStateListener(listenerHolder[0]);
+            if (retryCount == 0) {
+                new ReminderScheduler(context).scheduleAuthRecoveryRetry(reminder, 1);
+            }
+            pendingResult.finish();
+        };
+        listenerHolder[0] = firebaseAuth -> {
+            FirebaseUser user = firebaseAuth.getCurrentUser();
+            if (user == null || !completed.compareAndSet(false, true)) return;
+            handler.removeCallbacks(timeout);
+            auth.removeAuthStateListener(listenerHolder[0]);
+            if (uid.equals(user.getUid()) && showNotification(context, reminder)) {
+                repository.remove(eventId);
+            }
+            pendingResult.finish();
+        };
+        handler.postDelayed(timeout, AUTH_RECOVERY_WAIT_MILLIS);
+        auth.addAuthStateListener(listenerHolder[0]);
+    }
+
+    private boolean showNotification(Context context, EventReminder reminder) {
         if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context,
-                Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
+                Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return false;
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+        if (!notificationManager.areNotificationsEnabled()) return false;
 
         createChannel(context);
+        if (Build.VERSION.SDK_INT >= 26) {
+            NotificationManager manager = context.getSystemService(NotificationManager.class);
+            NotificationChannel channel = manager.getNotificationChannel(CHANNEL_ID);
+            if (channel != null && channel.getImportance() == NotificationManager.IMPORTANCE_NONE) {
+                return false;
+            }
+        }
         Intent open = new Intent(context, MisPlanesActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent contentIntent = PendingIntent.getActivity(context, reminder.stableId(), open,
@@ -52,7 +92,12 @@ public final class ReminderReceiver extends BroadcastReceiver {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true)
                 .setContentIntent(contentIntent);
-        NotificationManagerCompat.from(context).notify(reminder.stableId(), notification.build());
+        try {
+            notificationManager.notify(reminder.stableId(), notification.build());
+            return true;
+        } catch (SecurityException error) {
+            return false;
+        }
     }
 
     private void createChannel(Context context) {

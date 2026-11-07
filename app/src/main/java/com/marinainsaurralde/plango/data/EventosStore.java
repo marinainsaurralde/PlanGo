@@ -17,7 +17,7 @@ public final class EventosStore {
     private long lastUpdatedMillis;
     private String sessionUid;
 
-    private EventosStore() {
+    EventosStore() {
     }
 
     public static EventosStore getInstance() {
@@ -28,6 +28,13 @@ public final class EventosStore {
         eventos = Collections.unmodifiableList(new ArrayList<>(nuevosEventos));
         loaded = true;
         lastUpdatedMillis = System.currentTimeMillis();
+    }
+
+    /** Conserva una carga completa previa cuando una actualización posterior es parcial. */
+    public synchronized boolean setEventosFromLoad(List<Plan> nuevosEventos, boolean complete) {
+        if (loaded && !complete) return false;
+        setEventos(nuevosEventos);
+        return true;
     }
 
     public synchronized List<Plan> getEventos() {
